@@ -35,35 +35,43 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  // 2. Llamar a Gemini
+  // 3. Llamar a Gemini (soporta API keys AIza... y Auth keys AQ...)
+  const isAuthKey = GEMINI_KEY.startsWith("AQ");
   const systemPrompt = "Eres el asistente IA de Integra Mutual de Salud. Solo respondes con datos del contexto. NUNCA inventes precios, servicios ni eventos. Si no está en el contexto, decí que no tenés ese dato. Sé conciso.";
-  let responseText = "";
+
   try {
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: systemPrompt }] },
-          contents: [{
-            role: "user",
-            parts: [{ text: `Contexto de la base de datos:\n${context}\n\nPregunta del Coordinador: ${query}` }],
-          }],
-          generationConfig: { temperature: 0.1, maxOutputTokens: 600 },
-        }),
-      }
-    );
+    const url = isAuthKey
+      ? "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+      : `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
+
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (isAuthKey) {
+      // Auth keys (AQ...) usan x-goog-api-key header en vez de query param
+      headers["x-goog-api-key"] = GEMINI_KEY;
+    }
+
+    const geminiRes = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        contents: [{
+          role: "user",
+          parts: [{ text: `Contexto de la base de datos:\n${context}\n\nPregunta del Coordinador: ${query}` }],
+        }],
+        generationConfig: { temperature: 0.1, maxOutputTokens: 600 },
+      }),
+    });
 
     if (geminiRes.ok) {
       const json = (await geminiRes.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
-      responseText = json.candidates?.[0]?.content?.parts?.[0]?.text || "No pude generar una respuesta.";
+      const responseText = json.candidates?.[0]?.content?.parts?.[0]?.text || "No pude generar una respuesta.";
+      return NextResponse.json({ response: responseText, source: "gemini" });
     } else {
       const errText = await geminiRes.text();
-      console.error("Gemini error:", errText);
-      // Devolver datos de Supabase como fallback
+      console.error("Gemini error:", geminiRes.status, errText.slice(0, 200));
       return NextResponse.json({
-        response: `(Sin IA - ${geminiRes.status}) Esto es lo que hay en la base:\n\n${context.slice(0, 800)}`,
+        response: `(Error Gemini ${geminiRes.status}) Esto es lo que hay en la base:\n\n${context.slice(0, 800)}`,
         source: "supabase-fallback",
       });
     }
