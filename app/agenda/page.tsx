@@ -1,4 +1,4 @@
-import DailyAgenda from "../../components/DailyAgenda";
+import DailyAgenda from "../components/DailyAgenda";
 
 export const dynamic = "force-dynamic";
 
