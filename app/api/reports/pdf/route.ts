@@ -1,68 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import PDFDocument from "pdfkit";
 
-// POST /api/reports/pdf — generar PDF A4 Landscape de la matriz
+// POST /api/reports/pdf — genera HTML imprimible A4 Landscape
+// El frontend usa window.print() para guardar como PDF
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { matrix } = body; // array de filas con name, group_name, y columnas
+  const { matrix } = body;
 
   if (!matrix || !Array.isArray(matrix)) {
-    return NextResponse.json({ error: "matrix requerida (array de filas)" }, { status: 400 });
+    return NextResponse.json({ error: "matrix requerida" }, { status: 400 });
   }
 
-  const doc = new PDFDocument({
-    size: "A4",
-    layout: "landscape",
-    margin: 30,
-    info: {
-      Title: "Tarifas Planes Integra",
-      Author: "Integra Mutual",
-    },
-  });
-
-  const chunks: Buffer[] = [];
-  doc.on("data", (chunk: Buffer) => chunks.push(chunk));
-  const pdfPromise = new Promise<Buffer>((resolve) => {
-    doc.on("end", () => resolve(Buffer.concat(chunks)));
-  });
-
-  // Colores corporativos
-  const azul = "#1e3c72";
-  const verde = "#2ecc71";
-  const grisClaro = "#f4f4f4";
-
-  // Título
-  doc.fontSize(14).font("Helvetica-Bold").fillColor(azul).text("INTEGRA — Matriz de Costos", { align: "center" });
-  doc.fontSize(8).font("Helvetica").fillColor("#666").text(`Fecha: ${new Date().toLocaleDateString("es-AR")}`, { align: "center" });
-  doc.moveDown(0.5);
-
-  // Cabeceras de columna
-  const cols = [
-    { label: "Servicio", width: 180 },
-    { label: "Activo\n(60% desc.)", width: 90 },
-    { label: "Integra 90\n(Precio base)", width: 90 },
-    { label: "Integra 180\n(30% desc.)", width: 90 },
-    { label: "Integra 360\n(40% desc.)", width: 90 },
-    { label: "Integra 360 Plus\n(A confirmar)", width: 100 },
-  ];
-
-  const startX = 30;
-  let y = doc.y;
-
-  // Dibujar cabeceras
-  cols.forEach((col, i) => {
-    const x = startX + cols.slice(0, i).reduce((s, c) => s + c.width, 0);
-    doc.rect(x, y, col.width, 30).fill(azul);
-    doc.fontSize(7).font("Helvetica-Bold").fillColor("#fff").text(col.label, x + 3, y + 5, {
-      width: col.width - 6,
-      align: "center",
-      lineBreak: true,
-    });
-  });
-
-  y += 30;
-
-  // Agrupar por grupo
   const grouped: Record<string, typeof matrix> = {};
   matrix.forEach((row: { group_name: string }) => {
     const g = row.group_name || "Sin grupo";
@@ -70,63 +17,60 @@ export async function POST(request: NextRequest) {
     grouped[g].push(row);
   });
 
-  // Dibujar filas
-  Object.entries(grouped).forEach(([group, rows]) => {
-    // Fila de grupo
-    doc.rect(startX, y, cols.reduce((s, c) => s + c.width, 0), 18).fill(verde);
-    doc.fontSize(8).font("Helvetica-Bold").fillColor("#fff").text(group.toUpperCase(), startX + 5, y + 3);
-    y += 18;
+  const format = (v: number | null) => v != null ? `$${v.toFixed(2)}` : "—";
 
-    rows.forEach((row: Record<string, unknown>, rowIdx: number) => {
-      if (rowIdx % 2 === 0) {
-        doc.rect(startX, y, cols.reduce((s, c) => s + c.width, 0), 18).fill(grisClaro);
-      }
+  const rowsHtml = Object.entries(grouped)
+    .map(
+      ([group, rows]) => `
+      <tr><td colspan="6" class="group">${group.toUpperCase()}</td></tr>
+      ${rows.map((r: Record<string, unknown>) => `
+        <tr>
+          <td class="name">${r.name}</td>
+          <td class="price">${format(r.activo as number | null)}</td>
+          <td class="price base">${format(r.integra_90 as number | null)}</td>
+          <td class="price">${format(r.integra_180 as number | null)}</td>
+          <td class="price">${format(r.integra_360 as number | null)}</td>
+          <td class="price future">${r.integra_360_plus != null ? format(r.integra_360_plus as number | null) : "A confirmar"}</td>
+        </tr>
+      `).join("")}
+    `
+    )
+    .join("");
 
-      const values = [
-        row.name,
-        row.activo != null ? `$${Number(row.activo).toFixed(2)}` : "—",
-        row.integra_90 != null ? `$${Number(row.integra_90).toFixed(2)}` : "—",
-        row.integra_180 != null ? `$${Number(row.integra_180).toFixed(2)}` : "—",
-        row.integra_360 != null ? `$${Number(row.integra_360).toFixed(2)}` : "—",
-        row.integra_360_plus != null ? `$${Number(row.integra_360_plus).toFixed(2)}` : "A confirmar",
-      ];
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Tarifas Planes Integra</title>
+<style>
+  @page { size: A4 landscape; margin: 15mm; }
+  body { font-family: Arial, sans-serif; font-size: 11px; color: #333; }
+  h1 { color: #1e3c72; text-align: center; font-size: 16px; margin-bottom: 4px; }
+  .date { text-align: center; color: #666; font-size: 10px; margin-bottom: 12px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { background: #1e3c72; color: #fff; padding: 6px 8px; font-size: 10px; text-align: center; }
+  th small { display: block; font-weight: normal; opacity: 0.8; font-size: 8px; }
+  td { padding: 5px 8px; border-bottom: 1px solid #eee; }
+  td.name { text-align: left; font-weight: 500; }
+  td.price { text-align: right; }
+  td.base { font-weight: bold; color: #1e3c72; }
+  td.future { color: #999; }
+  .group { background: #2ecc71; color: #fff; font-weight: bold; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
+  .footer { text-align: center; color: #999; font-size: 9px; margin-top: 15px; }
+</style></head><body>
+<h1>INTEGRA — Matriz de Costos</h1>
+<p class="date">Fecha: ${new Date().toLocaleDateString("es-AR")}</p>
+<table>
+<thead><tr>
+  <th>Servicio</th>
+  <th>Activo<br><small>60% desc.</small></th>
+  <th>Integra 90<br><small>Precio base</small></th>
+  <th>Integra 180<br><small>30% desc.</small></th>
+  <th>Integra 360<br><small>40% desc.</small></th>
+  <th>Integra 360 Plus<br><small>A confirmar</small></th>
+</tr></thead>
+<tbody>${rowsHtml}</tbody></table>
+<p class="footer">Documento generado por Integra Mutual — Confidencial</p>
+</body></html>`;
 
-      cols.forEach((col, i) => {
-        const x = startX + cols.slice(0, i).reduce((s, c) => s + c.width, 0);
-        doc.fontSize(7).font("Helvetica").fillColor(i === 5 && row.integra_360_plus == null ? "#aaa" : "#333").text(
-          String(values[i]),
-          x + 3,
-          y + 4,
-          { width: col.width - 6, align: i === 0 ? "left" : "right" }
-        );
-      });
-
-      y += 18;
-
-      // Nueva página si se pasa
-      if (y > 540) {
-        doc.addPage({ size: "A4", layout: "landscape", margin: 30 });
-        y = 30;
-      }
-    });
-  });
-
-  // Footer
-  doc.fontSize(7).font("Helvetica").fillColor("#999").text(
-    "Documento generado por Integra Mutual — Confidencial",
-    startX,
-    doc.page.height - 30,
-    { align: "center" }
-  );
-
-  doc.end();
-  const pdfBuffer = await pdfPromise;
-
-  return new NextResponse(pdfBuffer, {
-    headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": 'inline; filename="Tarifas_Planes_Integra.pdf"',
-      "Cache-Control": "no-cache",
-    },
+  return new NextResponse(html, {
+    headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-cache" },
   });
 }

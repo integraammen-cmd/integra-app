@@ -23,21 +23,21 @@ export default function PdfShareButton({ matrix }: { matrix: unknown[] }) {
         return;
       }
 
-      const blob = await res.blob();
-      const file = new File([blob], "Tarifas_Planes_Integra.pdf", { type: "application/pdf" });
-
-      // Intentar Web Share API (WhatsApp, email, etc.)
-      if (typeof navigator !== "undefined" && navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({
-          title: "Tarifas Planes Integra",
-          files: [file],
-        });
+      const html = await res.text();
+      const win = window.open("", "_blank");
+      if (win) {
+        win.document.write(html);
+        win.document.close();
+        win.focus();
+        // Disparar impresión (el usuario elige "Guardar como PDF")
+        setTimeout(() => win.print(), 500);
       } else {
-        // Fallback: descarga directa
+        // Fallback: descargar como HTML
+        const blob = new Blob([html], { type: "text/html" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = "Tarifas_Planes_Integra.pdf";
+        a.download = "Tarifas_Planes_Integra.html";
         a.click();
         URL.revokeObjectURL(url);
       }
