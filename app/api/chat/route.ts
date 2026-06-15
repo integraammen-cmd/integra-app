@@ -59,14 +59,19 @@ export async function POST(request: NextRequest) {
       const json = (await geminiRes.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
       responseText = json.candidates?.[0]?.content?.parts?.[0]?.text || "No pude generar una respuesta.";
     } else {
-      const err = await geminiRes.text();
-      console.error("Gemini error:", err);
-      responseText = "Error al conectar con el asistente IA.";
+      const errText = await geminiRes.text();
+      console.error("Gemini error:", errText);
+      // Devolver datos de Supabase como fallback
+      return NextResponse.json({
+        response: `(Sin IA - ${geminiRes.status}) Esto es lo que hay en la base:\n\n${context.slice(0, 800)}`,
+        source: "supabase-fallback",
+      });
     }
   } catch (err) {
     console.error("IA chat error:", err);
-    responseText = "Error al conectar con el asistente IA.";
+    return NextResponse.json({
+      response: `(Error de red) Esto es lo que hay en la base:\n\n${context.slice(0, 800)}`,
+      source: "supabase-fallback",
+    });
   }
-
-  return NextResponse.json({ response: responseText, source: "supabase+gemini" });
 }
