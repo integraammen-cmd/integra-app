@@ -56,6 +56,8 @@ export default function WeeklyCalendar() {
 
   useEffect(() => { loadEvents(); }, [loadEvents]);
 
+  const dayEvents = events.filter((e) => fmtDate(new Date(e.start_time)) === selectedDay);
+
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
