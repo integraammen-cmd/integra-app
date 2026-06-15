@@ -110,9 +110,9 @@ export default function DailyAgenda() {
   const sortedHours = Object.keys(grouped).sort();
 
   return (
-    <div className="rounded-xl bg-white shadow-sm">
-      <div className="flex items-center justify-between border-b px-6 py-4">
-        <h2 className="text-lg font-semibold text-[#1e3c72]">Agenda Diaria</h2>
+    <div className="rounded-xl bg-zinc-800/50 border border-zinc-700">
+      <div className="flex items-center justify-between border-b border-zinc-700 px-6 py-4">
+        <h2 className="text-lg font-semibold text-white">Agenda Diaria</h2>
         <button
           onClick={() => setShowForm(!showForm)}
           className="rounded-lg bg-[#2ecc71] px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600 transition-colors"
@@ -122,7 +122,7 @@ export default function DailyAgenda() {
       </div>
 
       {/* Filtros */}
-      <div className="flex gap-2 px-6 py-3 border-b overflow-x-auto">
+      <div className="flex gap-2 px-6 py-3 border-b border-zinc-700 overflow-x-auto">
         {["todas", "salud", "sociales", "gremial", "admin", "urgente"].map((cat) => (
           <button
             key={cat}
@@ -130,7 +130,7 @@ export default function DailyAgenda() {
             className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
               filter === cat
                 ? "bg-[#1e3c72] text-white"
-                : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                : "bg-zinc-700 text-zinc-300 hover:bg-zinc-600"
             }`}
           >
             {cat === "todas" ? "Todas" : CATEGORY_LABELS[cat]}
@@ -140,27 +140,27 @@ export default function DailyAgenda() {
 
       {/* Formulario */}
       {showForm && (
-        <form onSubmit={handleCreate} className="border-b bg-zinc-50 px-6 py-4">
+        <form onSubmit={handleCreate} className="border-b border-zinc-700 bg-zinc-800/30 px-6 py-4">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             <input
               type="text"
               placeholder="Título"
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
-              className="rounded-lg border px-3 py-2 text-sm"
+              className="rounded-lg border border-zinc-600 bg-zinc-700 px-3 py-2 text-sm text-white placeholder-zinc-400"
               required
             />
             <input
               type="datetime-local"
               value={form.start_time}
               onChange={(e) => setForm({ ...form, start_time: e.target.value })}
-              className="rounded-lg border px-3 py-2 text-sm"
+              className="rounded-lg border border-zinc-600 bg-zinc-700 px-3 py-2 text-sm text-white"
               required
             />
             <select
               value={form.category}
               onChange={(e) => setForm({ ...form, category: e.target.value as Event["category"] })}
-              className="rounded-lg border px-3 py-2 text-sm"
+              className="rounded-lg border border-zinc-600 bg-zinc-700 px-3 py-2 text-sm text-white"
             >
               {Object.entries(CATEGORY_LABELS).map(([k, v]) => (
                 <option key={k} value={k}>{v}</option>
@@ -168,7 +168,7 @@ export default function DailyAgenda() {
             </select>
           </div>
           <div className="mt-3 flex items-center gap-4">
-            <label className="flex items-center gap-2 text-sm text-zinc-600">
+            <label className="flex items-center gap-2 text-sm text-zinc-300">
               <input
                 type="checkbox"
                 checked={form.alarm_enabled}
@@ -184,24 +184,24 @@ export default function DailyAgenda() {
               Guardar
             </button>
           </div>
-          {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+          {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
         </form>
       )}
 
       {/* Agenda cronológica */}
       <div className="p-6">
         {sortedHours.length === 0 ? (
-          <p className="text-center text-sm text-zinc-400">Sin eventos para mostrar</p>
+          <p className="text-center text-sm text-zinc-500">Sin eventos para mostrar</p>
         ) : (
           <div className="space-y-6">
             {sortedHours.map((hour) => (
               <div key={hour}>
-                <h3 className="mb-2 text-sm font-medium text-zinc-400">{hour}</h3>
+                <h3 className="mb-2 text-sm font-medium text-zinc-500">{hour}</h3>
                 <div className="space-y-2">
                   {grouped[hour].map((event) => (
                     <div
                       key={event.id}
-                      className="flex items-start justify-between rounded-lg border border-zinc-200 p-3 hover:border-zinc-300 transition-colors"
+                      className="flex items-start justify-between rounded-lg border border-zinc-700 bg-zinc-800/50 p-3 hover:border-zinc-600 transition-colors"
                     >
                       <div className="flex items-start gap-3">
                         <span
@@ -211,15 +211,15 @@ export default function DailyAgenda() {
                         </span>
                         <div>
                           <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium text-zinc-800">{event.title}</p>
+                            <p className="text-sm font-medium text-zinc-200">{event.title}</p>
                             {event.alarm_enabled && (
                               <span title="Alarma activada">🔔</span>
                             )}
                           </div>
                           {event.description && (
-                            <p className="mt-0.5 text-xs text-zinc-500">{event.description}</p>
+                            <p className="mt-0.5 text-xs text-zinc-400">{event.description}</p>
                           )}
-                          <p className="mt-1 text-xs text-zinc-400">
+                          <p className="mt-1 text-xs text-zinc-500">
                             {new Date(event.start_time).toLocaleTimeString("es-AR", {
                               hour: "2-digit",
                               minute: "2-digit",
