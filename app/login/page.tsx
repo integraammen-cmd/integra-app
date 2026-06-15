@@ -40,7 +40,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50">
+    <div className="flex min-h-screen items-center justify-center bg-[#0f1117]">
       <div className="w-full max-w-sm rounded-xl bg-white p-8 shadow-lg">
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-bold text-[#1e3c72]">Integra</h1>
