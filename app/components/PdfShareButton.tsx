@@ -1,50 +1,134 @@
 "use client";
 
 import { useState } from "react";
+import { jsPDF } from "jspdf";
+
+type MatrixRow = {
+  grupo: string;
+  servicio: string;
+  activo: number | null;
+  integra_90: number | null;
+  integra_180: number | null;
+  integra_360: number | null;
+  integra_360_plus: number | null;
+};
+
+function buildPDF(matrix: MatrixRow[]): Blob {
+  const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+  const today = new Date().toLocaleDateString("es-AR");
+
+  // Títulos
+  doc.setFontSize(14);
+  doc.setTextColor(30, 60, 114);
+  doc.text("INTEGRA MUTUAL — Tarifas por Plan", 10, 15);
+  doc.setFontSize(9);
+  doc.setTextColor(100);
+  doc.text(`Actualizado: ${today}`, 10, 22);
+
+  // Columnas
+  const cols = [
+    { header: "Grupo", dataKey: "grupo" },
+    { header: "Servicio", dataKey: "servicio" },
+    { header: "Activo", dataKey: "activo" },
+    { header: "Integra 90", dataKey: "integra_90" },
+    { header: "Integra 180", dataKey: "integra_180" },
+    { header: "Integra 360", dataKey: "integra_360" },
+    { header: "360 Plus", dataKey: "integra_360_plus" },
+  ];
+
+  // Encabezados de tabla
+  doc.setFillColor(30, 60, 114);
+  doc.setTextColor(255);
+  doc.setFontSize(8);
+  let x = 10;
+  const colW = [35, 60, 22, 22, 22, 22, 22];
+  cols.forEach((c, i) => {
+    doc.rect(x, 27, colW[i], 7, "F");
+    doc.text(c.header, x + 1, 32);
+    x += colW[i];
+  });
+
+  // Filas
+  doc.setTextColor(40);
+  doc.setFontSize(7);
+  let y = 37;
+  matrix.forEach((row, ri) => {
+    if (y > 190) {
+      doc.addPage();
+      y = 10;
+    }
+    // Fondo alternado
+    if (ri % 2 === 0) {
+      doc.setFillColor(245, 245, 250);
+      doc.rect(10, y - 4, colW.reduce((a, b) => a + b, 0), 5, "F");
+    }
+    x = 10;
+    const vals = [row.grupo, row.servicio, row.activo != null ? `$${row.activo.toFixed(2)}` : "—", row.integra_90 != null ? `$${row.integra_90.toFixed(2)}` : "—", row.integra_180 != null ? `$${row.integra_180.toFixed(2)}` : "—", row.integra_360 != null ? `$${row.integra_360.toFixed(2)}` : "—", row.integra_360_plus != null ? `$${row.integra_360_plus.toFixed(2)}` : "Pendiente"];
+    vals.forEach((v, i) => {
+      doc.text(String(v).substring(0, i === 1 ? 40 : 20), x + 1, y);
+      x += colW[i];
+    });
+    y += 5.5;
+  });
+
+  const pdfBytes = doc.output("blob");
+  return pdfBytes;
+}
 
 export default function PdfShareButton({ matrix }: { matrix: unknown[] }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const today = new Date().toLocaleDateString("es-AR");
 
   async function handleExport() {
     setLoading(true);
     setError(null);
-
     try {
-      const res = await fetch("/api/reports/pdf", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ matrix }),
-      });
-
-      if (!res.ok) {
-        setError("Error al generar el PDF");
-        setLoading(false);
-        return;
-      }
-
-      const html = await res.text();
-      const win = window.open("", "_blank");
-      if (win) {
-        win.document.write(html);
-        win.document.close();
-        win.focus();
-        // Disparar impresión (el usuario elige "Guardar como PDF")
-        setTimeout(() => win.print(), 500);
-      } else {
-        // Fallback: descargar como HTML
-        const blob = new Blob([html], { type: "text/html" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "Tarifas_Planes_Integra.html";
-        a.click();
-        URL.revokeObjectURL(url);
-      }
+      const pdfBlob = buildPDF(matrix as MatrixRow[]);
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Tarifas_Integra_${today.replace(/\//g, "-")}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error desconocido");
     }
+    setLoading(false);
+  }
 
+  async function handleWhatsApp() {
+    setLoading(true);
+    setError(null);
+    try {
+      const pdfBlob = buildPDF(matrix as MatrixRow[]);
+      const file = new File([pdfBlob], `Tarifas_Integra_${today.replace(/\//g, "-")}.pdf`, { type: "application/pdf" });
+
+      // Web Share API: abre WhatsApp directamente en mobile
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: "Tarifas Planes Integra",
+          text: `Tarifas actualizadas al ${today}`,
+          files: [file],
+        });
+      } else {
+        // Fallback desktop: descargar PDF + abrir WhatsApp Web
+        const url = URL.createObjectURL(pdfBlob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Tarifas_Integra_${today.replace(/\//g, "-")}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+        window.open(
+          `https://wa.me/?text=${encodeURIComponent(`Tarifas Planes Integra — ${today}\nSe descargó el PDF. Compartilo manualmente desde tu dispositivo.`)}`,
+          "_blank"
+        );
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name !== "AbortError") {
+        setError(err.message);
+      }
+    }
     setLoading(false);
   }
 
@@ -58,45 +142,7 @@ export default function PdfShareButton({ matrix }: { matrix: unknown[] }) {
         {loading ? "⏳" : "📄"} Exportar PDF
       </button>
       <button
-        onClick={async () => {
-          setLoading(true);
-          setError(null);
-          try {
-            const res = await fetch("/api/reports/pdf", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ matrix }),
-            });
-            if (!res.ok) throw new Error("Error al generar el reporte");
-            const html = await res.text();
-            const blob = new Blob([html], { type: "text/html" });
-            const file = new File([blob], "Tarifas_Planes_Integra.html", { type: "text/html" });
-
-            // Intentar Web Share API (mobile: comparte directo a WhatsApp)
-            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-              await navigator.share({
-                title: "Tarifas Planes Integra",
-                text: `Tarifas actualizadas al ${new Date().toLocaleDateString("es-AR")}`,
-                files: [file],
-              });
-            } else {
-              // Fallback desktop: descargar HTML + abrir WhatsApp con mensaje
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = "Tarifas_Planes_Integra.html";
-              a.click();
-              URL.revokeObjectURL(url);
-              const text = encodeURIComponent(
-                `Tarifas Planes Integra — ${new Date().toLocaleDateString("es-AR")}\nDescargá el archivo HTML y abrilo en tu navegador para ver la tabla completa.`
-              );
-              window.open(`https://wa.me/?text=${text}`, "_blank");
-            }
-          } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : "Error desconocido");
-          }
-          setLoading(false);
-        }}
+        onClick={handleWhatsApp}
         disabled={loading}
         className="flex items-center gap-2 rounded-lg bg-[#25D366] px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50 transition-colors"
       >
