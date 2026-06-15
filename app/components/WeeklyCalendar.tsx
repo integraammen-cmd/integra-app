@@ -45,6 +45,7 @@ export default function WeeklyCalendar() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: "", start_time: "", category: "admin" as Event["category"], alarm_enabled: false });
   const [error, setError] = useState<string | null>(null);
+  const [selectedDay, setSelectedDay] = useState<string>(fmtDate(new Date()));
   const weekDays = getWeekDays();
   const hours = Array.from({ length: 11 }, (_, i) => i + 8); // 8 a 18
 
@@ -90,7 +91,39 @@ export default function WeeklyCalendar() {
         </h2>
       </div>
 
-      <div className="overflow-x-auto">
+      {/* Day selector */}
+      <div className="flex gap-1.5 overflow-x-auto px-4 py-2 border-b border-zinc-700">
+        {weekDays.map((d) => {
+          const ds = fmtDate(d);
+          const isToday = ds === fmtDate(new Date());
+          const isSelected = ds === selectedDay;
+          return (
+            <button key={ds} onClick={() => setSelectedDay(ds)}
+              className={`flex-shrink-0 rounded-xl px-4 py-2 text-xs font-medium transition-colors ${
+                isSelected ? "bg-[#1e3c72] text-white" : isToday ? "bg-zinc-700 text-white border border-[#1e3c72]" : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+              }`}>
+              <div>{d.toLocaleDateString("es-AR", { weekday: "short" })}</div>
+              <div className="text-lg">{d.getDate()}</div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Lista del día seleccionado */}
+      {dayEvents.length > 0 && (
+        <div className="px-4 py-3 border-b border-zinc-700 space-y-1.5">
+          <h3 className="text-xs font-semibold text-zinc-500 mb-2">Eventos del día</h3>
+          {dayEvents.map((e) => (
+            <div key={e.id} className="flex items-center gap-2 text-xs">
+              <span className="text-zinc-500 w-12">{new Date(e.start_time).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}</span>
+              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${CATEGORY_BG[e.category]}`}>{e.category}</span>
+              <span className="text-zinc-200">{e.title}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="overflow-x-auto"> {/* Grilla semanal */}
         <table className="w-full min-w-[700px]">
           <thead>
             <tr className="border-b border-zinc-700">
