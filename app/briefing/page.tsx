@@ -1,73 +1,61 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
 
-export default function BriefingPage() {
-  const [briefings, setBriefings] = useState<
-    { id: string; date: string; summary: string; critical_alerts: string[] }[]
-  >([]);
-  const [selected, setSelected] = useState<string | null>(null);
+export default function ChatPage() {
+  const [messages, setMessages] = useState<{ role: "user" | "assistant"; text: string }[]>([
+    { role: "assistant", text: "Hola, soy el asistente de Integra. Preguntame sobre servicios, precios, eventos o la matriz de costos. Solo respondo con datos reales de la base de datos." },
+  ]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const load = useCallback(async () => {
-    const res = await fetch("/api/briefings");
-    if (res.ok) {
+  async function send() {
+    if (!input.trim() || loading) return;
+    const q = input.trim();
+    setInput("");
+    setMessages((m) => [...m, { role: "user", text: q }]);
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: q }),
+      });
       const data = await res.json();
-      setBriefings(data);
-      if (data.length > 0) setSelected(data[0].id);
+      setMessages((m) => [...m, { role: "assistant", text: data.response || "Sin respuesta." }]);
+    } catch {
+      setMessages((m) => [...m, { role: "assistant", text: "Error de conexión." }]);
     }
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
-
-  const current = briefings.find((b) => b.id === selected);
+    setLoading(false);
+  }
 
   return (
-    <div className="mx-auto flex max-w-4xl gap-6 px-4 py-8">
-      {/* Sidebar */}
-      <div className="w-56 shrink-0 space-y-1">
-        <h2 className="mb-3 text-sm font-semibold text-[#1e3c72]">Briefings</h2>
-        {briefings.map((b) => (
-          <button
-            key={b.id}
-            onClick={() => setSelected(b.id)}
-            className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
-              selected === b.id
-                ? "bg-[#1e3c72] text-white"
-                : "text-zinc-600 hover:bg-zinc-100"
-            }`}
-          >
-            {new Date(b.date + "T00:00:00").toLocaleDateString("es-AR", {
-              weekday: "short",
-              day: "numeric",
-              month: "short",
-            })}
-          </button>
+    <div className="flex min-h-screen flex-col bg-[#0f1117] pb-20">
+      <header className="border-b border-zinc-800 px-5 py-4">
+        <h1 className="text-lg font-bold text-white">IA CHAT</h1>
+        <p className="text-xs text-zinc-500">Basado en datos reales de la mutual</p>
+      </header>
+
+      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+        {messages.map((m, i) => (
+          <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+            <div className={`max-w-[85%] rounded-xl px-4 py-3 text-sm ${
+              m.role === "user" ? "bg-[#1e3c72] text-white" : "bg-zinc-800/80 text-zinc-200 border border-zinc-700"
+            }`}>
+              {m.text}
+            </div>
+          </div>
         ))}
-        {briefings.length === 0 && (
-          <p className="text-xs text-zinc-400">Sin briefings aún</p>
-        )}
+        {loading && <div className="flex justify-start"><div className="rounded-xl bg-zinc-800/80 px-4 py-3 text-sm text-zinc-400 border border-zinc-700">Pensando...</div></div>}
       </div>
 
-      {/* Contenido */}
-      <div className="flex-1 rounded-xl bg-white p-6 shadow-sm">
-        {current ? (
-          <div className="prose prose-sm max-w-none">
-            <h1 className="mb-1 text-lg font-bold text-[#1e3c72]">
-              Briefing — {new Date(current.date + "T00:00:00").toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" })}
-            </h1>
-            <div
-              dangerouslySetInnerHTML={{
-                __html: current.summary
-                  .replace(/## /g, "<h2>")
-                  .replace(/### /g, "<h3>")
-                  .replace(/\n\n/g, "</p><p>")
-                  .replace(/\n- /g, "<br/>- "),
-              }}
-            />
-          </div>
-        ) : (
-          <p className="text-center text-zinc-400">Seleccioná un briefing</p>
-        )}
+      <div className="border-t border-zinc-800 px-4 py-3 pb-4">
+        <div className="flex gap-2">
+          <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()}
+            placeholder="Preguntá sobre servicios, precios, eventos..." className="flex-1 rounded-lg border border-zinc-600 bg-zinc-700 px-4 py-2.5 text-sm text-white placeholder-zinc-400" />
+          <button onClick={send} disabled={loading} className="rounded-lg bg-[#1e3c72] px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50 transition-colors">Enviar</button>
+        </div>
       </div>
     </div>
   );
