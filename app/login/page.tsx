@@ -1,23 +1,30 @@
 "use client";
 
 import { createClient } from "@/app/lib/supabase-browser";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
-  const [isClient, setIsClient] = useState(false);
 
-  useEffect(() => {
-    setIsClient(true);
+  const handleAuthCode = useCallback(async () => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+
+    if (code) {
+      const supabase = createClient();
+      const { error: exchangeErr } = await supabase.auth.exchangeCodeForSession(code);
+      if (!exchangeErr) {
+        window.location.replace("/");
+      } else {
+        setError("Error al iniciar sesión. Intentá de nuevo.");
+        window.history.replaceState({}, "", "/login");
+      }
+    }
   }, []);
 
   useEffect(() => {
-    if (!isClient) return;
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("error")) {
-      setError("Error al iniciar sesión. Intentá de nuevo.");
-    }
-  }, [isClient]);
+    handleAuthCode();
+  }, [handleAuthCode]);
 
   async function signInWithGoogle() {
     const supabase = createClient();
