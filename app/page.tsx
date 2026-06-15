@@ -25,31 +25,9 @@ export default function Home() {
       <main className="flex-1 space-y-5 px-5 py-4">
         <WeeklyAgenda />
 
-        <section>
-          <h2 className="mb-3 text-sm font-semibold text-zinc-300 uppercase tracking-wider">ACCESOS RÁPIDOS</h2>
-          <div className="grid grid-cols-2 gap-3">
-            <QuickLink href="/matriz" icon="📊" label="Matriz de Costos" sub="Tarifas por socio" />
-            <QuickLink href="/agenda" icon="📅" label="Calendario" sub="Semanal" />
-            <QuickLink href="/briefing" icon="🤖" label="IA Chat" sub="Asistente" />
-            <QuickLink href="/matriz/cargar" icon="⚙️" label="Ajustes" sub="Servicios" />
-          </div>
-        </section>
+
       </main>
     </div>
   );
 }
 
-function QuickLink({ href, icon, label, sub }: { href: string; icon: string; label: string; sub: string }) {
-  return (
-    <a
-      href={href}
-      className="flex items-center gap-3 rounded-xl bg-zinc-800/50 p-4 hover:bg-zinc-700/50 transition-colors"
-    >
-      <span className="text-2xl">{icon}</span>
-      <div>
-        <p className="text-sm font-medium text-white">{label}</p>
-        <p className="text-xs text-zinc-500">{sub}</p>
-      </div>
-    </a>
-  );
-}

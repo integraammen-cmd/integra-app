@@ -58,13 +58,49 @@ export default function PdfShareButton({ matrix }: { matrix: unknown[] }) {
         {loading ? "⏳" : "📄"} Exportar PDF
       </button>
       <button
-        onClick={() => {
-          const text = encodeURIComponent("Tarifas Planes Integra — " + new Date().toLocaleDateString("es-AR"));
-          window.open(`https://wa.me/?text=${text}`, "_blank");
+        onClick={async () => {
+          setLoading(true);
+          setError(null);
+          try {
+            const res = await fetch("/api/reports/pdf", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ matrix }),
+            });
+            if (!res.ok) throw new Error("Error al generar el reporte");
+            const html = await res.text();
+            const blob = new Blob([html], { type: "text/html" });
+            const file = new File([blob], "Tarifas_Planes_Integra.html", { type: "text/html" });
+
+            // Intentar Web Share API (mobile: comparte directo a WhatsApp)
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+              await navigator.share({
+                title: "Tarifas Planes Integra",
+                text: `Tarifas actualizadas al ${new Date().toLocaleDateString("es-AR")}`,
+                files: [file],
+              });
+            } else {
+              // Fallback desktop: descargar HTML + abrir WhatsApp con mensaje
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "Tarifas_Planes_Integra.html";
+              a.click();
+              URL.revokeObjectURL(url);
+              const text = encodeURIComponent(
+                `Tarifas Planes Integra — ${new Date().toLocaleDateString("es-AR")}\nDescargá el archivo HTML y abrilo en tu navegador para ver la tabla completa.`
+              );
+              window.open(`https://wa.me/?text=${text}`, "_blank");
+            }
+          } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Error desconocido");
+          }
+          setLoading(false);
         }}
-        className="flex items-center gap-2 rounded-lg bg-[#25D366] px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 transition-colors"
+        disabled={loading}
+        className="flex items-center gap-2 rounded-lg bg-[#25D366] px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50 transition-colors"
       >
-        💬 WhatsApp
+        {loading ? "⏳" : "💬"} WhatsApp
       </button>
       {error && <p className="text-xs text-red-400">{error}</p>}
     </div>
