@@ -34,3 +34,4 @@ yarn-error.log*
 # env files (NEVER commit keys)
 .env*
 .vercel
+.env*.local

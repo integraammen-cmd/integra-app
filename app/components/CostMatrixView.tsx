@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
+import PdfShareButton from "./PdfShareButton";
 
 type MatrixRow = {
   id: string;
@@ -85,10 +86,11 @@ export default function CostMatrixView() {
           </a>
           <button
             onClick={loadMatrix}
-            className="rounded-lg border px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50 transition-colors"
+            className="rounded-lg border px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800 transition-colors"
           >
             ↻ Recalcular
           </button>
+          <PdfShareButton matrix={rows} />
         </div>
       </div>
 

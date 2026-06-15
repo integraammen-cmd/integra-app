@@ -24,7 +24,7 @@ INSERT INTO service_groups (name) VALUES
   ('Convenios'),
   ('Comed'),
   ('Famyl'),
-  ('Petraslia')
+  ('Petraglia')
 ON CONFLICT (name) DO NOTHING;
 
 -- Servicios con sus precios base (Integra 90)
