@@ -1,0 +1,93 @@
+openapi: 3.0.3
+info:
+  title: Integra Mutual API
+  version: 1.0.0
+  description: API para gestión de servicios, matriz de costos, agenda y reportes de la Mutual Integra.
+servers:
+  - url: https://api.integra.example.com
+    description: Producción
+  - url: https://staging.api.integra.example.com
+    description: Staging
+paths:
+  /api/services:
+    get:
+      summary: Listar servicios
+      tags: [Servicios]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Lista de servicios agrupados por categoría
+  /api/matrix:
+    get:
+      summary: Matriz de costos
+      tags: [Costos]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Matriz con 5 columnas de socios y precios calculados
+  /api/price-update:
+    post:
+      summary: Aumento porcentual masivo
+      tags: [Costos]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [percentage_increase, rounding_rule]
+              properties:
+                group_id:
+                  type: string
+                  format: uuid
+                percentage_increase:
+                  type: number
+                rounding_rule:
+                  type: string
+                  enum: [none, nearest_10, nearest_100]
+      responses:
+        '200':
+          description: Filas modificadas
+  /api/events:
+    get:
+      summary: Listar eventos
+      tags: [Agenda]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Eventos del usuario autenticado
+    post:
+      summary: Crear evento
+      tags: [Agenda]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '201':
+          description: Evento creado
+  /api/briefings:
+    get:
+      summary: Reportes matutinos
+      tags: [Reportes]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Briefing del día o histórico
+  /api/reports/pdf:
+    post:
+      summary: Generar PDF de matriz
+      tags: [Reportes]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: PDF binario
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
