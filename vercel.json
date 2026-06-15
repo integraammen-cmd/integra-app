@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/alarm-worker",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/morning-briefing",
+      "schedule": "0 6 * * *"
+    }
+  ]
+}
