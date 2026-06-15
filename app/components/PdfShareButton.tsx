@@ -49,15 +49,24 @@ export default function PdfShareButton({ matrix }: { matrix: unknown[] }) {
   }
 
   return (
-    <div className="inline-flex flex-col items-start gap-1">
+    <div className="inline-flex items-center gap-2">
       <button
         onClick={handleExport}
         disabled={loading}
         className="flex items-center gap-2 rounded-lg bg-[#2ecc71] px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50 transition-colors"
       >
-        {loading ? "⏳ Generando..." : "📄 Exportar PDF"}
+        {loading ? "⏳" : "📄"} Exportar PDF
       </button>
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      <button
+        onClick={() => {
+          const text = encodeURIComponent("Tarifas Planes Integra — " + new Date().toLocaleDateString("es-AR"));
+          window.open(`https://wa.me/?text=${text}`, "_blank");
+        }}
+        className="flex items-center gap-2 rounded-lg bg-[#25D366] px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 transition-colors"
+      >
+        💬 WhatsApp
+      </button>
+      {error && <p className="text-xs text-red-400">{error}</p>}
     </div>
   );
 }

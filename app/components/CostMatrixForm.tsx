@@ -52,9 +52,9 @@ export default function CostMatrixForm({ onSaved }: { onSaved: () => void }) {
   }
 
   return (
-    <div className="rounded-xl bg-white shadow-sm">
-      <div className="border-b px-6 py-4">
-        <h2 className="text-lg font-semibold text-[#1e3c72]">
+    <div className="rounded-xl bg-zinc-800/50 border border-zinc-700">
+      <div className="border-b border-zinc-700 px-6 py-4">
+        <h2 className="text-lg font-semibold text-white">
           {editingId ? "Editar Servicio" : "Cargar Servicio"}
         </h2>
       </div>
@@ -65,13 +65,13 @@ export default function CostMatrixForm({ onSaved }: { onSaved: () => void }) {
           placeholder="Nombre del servicio"
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className="w-full rounded-lg border px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-zinc-600 bg-zinc-700 px-3 py-2 text-sm text-white placeholder-zinc-400"
           required
         />
         <select
           value={form.group_id}
           onChange={(e) => setForm({ ...form, group_id: e.target.value })}
-          className="w-full rounded-lg border px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-zinc-600 bg-zinc-700 px-3 py-2 text-sm text-white"
           required
         >
           <option value="">Seleccionar grupo</option>
@@ -86,16 +86,16 @@ export default function CostMatrixForm({ onSaved }: { onSaved: () => void }) {
           placeholder="Precio base (Integra 90)"
           value={form.base_price}
           onChange={(e) => setForm({ ...form, base_price: e.target.value })}
-          className="w-full rounded-lg border px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-zinc-600 bg-zinc-700 px-3 py-2 text-sm text-white placeholder-zinc-400"
           required
         />
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-red-400">{error}</p>}
         <div className="flex gap-2">
           <button type="submit" className="rounded-lg bg-[#2ecc71] px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600 transition-colors">
             {editingId ? "Actualizar" : "Guardar"}
           </button>
           {editingId && (
-            <button type="button" onClick={() => { setEditingId(null); setForm({ name: "", group_id: "", base_price: "" }); }} className="rounded-lg border px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">
+            <button type="button" onClick={() => { setEditingId(null); setForm({ name: "", group_id: "", base_price: "" }); }} className="rounded-lg border border-zinc-600 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-700">
               Cancelar
             </button>
           )}
@@ -103,19 +103,19 @@ export default function CostMatrixForm({ onSaved }: { onSaved: () => void }) {
       </form>
 
       {/* Lista de servicios cargados */}
-      <div className="border-t px-6 py-4">
-        <h3 className="mb-2 text-sm font-medium text-zinc-500">Servicios cargados ({services.length})</h3>
+      <div className="border-t border-zinc-700 px-6 py-4">
+        <h3 className="mb-2 text-sm font-medium text-zinc-400">Servicios cargados ({services.length})</h3>
         <div className="max-h-64 space-y-1 overflow-y-auto">
           {services.map((s) => (
-            <div key={s.id} className="flex items-center justify-between rounded-lg border px-3 py-2 text-sm">
+            <div key={s.id} className="flex items-center justify-between rounded-lg border border-zinc-700 px-3 py-2 text-sm">
               <div>
-                <span className="font-medium text-zinc-700">{s.name}</span>
-                <span className="ml-2 text-xs text-zinc-400">({s.group_name})</span>
+                <span className="font-medium text-zinc-200">{s.name}</span>
+                <span className="ml-2 text-xs text-zinc-500">({s.group_name})</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-[#1e3c72]">${s.base_price?.toFixed(2)}</span>
-                <button onClick={() => startEdit(s)} className="text-xs text-blue-600 hover:underline">Editar</button>
-                <button onClick={() => handleDelete(s.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>
+                <span className="text-sm font-medium text-emerald-400">${s.base_price?.toFixed(2)}</span>
+                <button onClick={() => startEdit(s)} className="text-xs text-blue-400 hover:underline">Editar</button>
+                <button onClick={() => handleDelete(s.id)} className="text-xs text-red-400 hover:underline">Eliminar</button>
               </div>
             </div>
           ))}
