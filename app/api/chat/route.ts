@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
   }
 
   // 2. Llamar a Gemini
+  const systemPrompt = "Eres el asistente IA de Integra Mutual de Salud. Solo respondes con datos del contexto. NUNCA inventes precios, servicios ni eventos. Si no está en el contexto, decí que no tenés ese dato. Sé conciso.";
   let responseText = "";
   try {
     const geminiRes = await fetch(
