@@ -7,9 +7,20 @@ export default async function Home() {
   } = await supabase.auth.getUser();
 
   const today = new Date();
+  const todayStr = today.toISOString().split("T")[0];
   const days = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
   const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
   const dateStr = `${days[today.getDay()]}, ${today.getDate()} de ${months[today.getMonth()]}`;
+
+  // Fetch today's events
+  const { data: todayEvents } = user ? await supabase
+    .from("events")
+    .select("*")
+    .eq("user_id", user.id)
+    .gte("start_time", `${todayStr}T00:00:00Z`)
+    .lte("start_time", `${todayStr}T23:59:59Z`)
+    .order("start_time", { ascending: true })
+    : { data: [] };
 
   return (
     <div className="flex min-h-screen flex-col bg-[#0f1117] pb-20">
@@ -29,44 +40,29 @@ export default async function Home() {
       </header>
 
       <main className="flex-1 space-y-5 px-5 py-4">
-        {/* Días de la semana */}
-        <div className="flex gap-2 overflow-x-auto">
-          {["Lun", "Mar", "Mié", "Hoy", "Vie", "Sáb", "Dom"].map((d, i) => (
-            <button
-              key={d}
-              className={`rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
-                d === "Hoy"
-                  ? "bg-[#1e3c72] text-white"
-                  : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
-              }`}
-            >
-              {d === "Hoy" ? `Hoy ${today.getDate()}` : `${d} ${today.getDate() - 3 + i}`}
-            </button>
-          ))}
-        </div>
-
-        {/* TEMAS CLAVE DE HOY */}
+        {/* Agenda del día */}
         <section>
           <h2 className="mb-3 text-sm font-semibold text-zinc-300 uppercase tracking-wider">
-            TEMAS CLAVE DE HOY
+            📅 AGENDA DE HOY
           </h2>
-          <div className="grid grid-cols-3 gap-3">
-            <TopicCard icon="🏥" label="Salud" color="emerald" />
-            <TopicCard icon="👥" label="Sociales" color="blue" />
-            <TopicCard icon="📋" label="Gremial" color="purple" />
-          </div>
-        </section>
-
-        {/* INFORME MATUTINO */}
-        <section>
-          <h2 className="mb-3 text-sm font-semibold text-zinc-300 uppercase tracking-wider">
-            TU INFORME MATUTINO
-          </h2>
-          <div className="space-y-2">
-            <BriefingRow icon="🎯" text="Revisar agenda de hoy y prioridades" />
-            <BriefingRow icon="⚠️" text="Alertas pendientes de resolución" />
-            <BriefingRow icon="📝" text="Seguimiento de trámites en curso" />
-          </div>
+          {todayEvents && todayEvents.length > 0 ? (
+            <div className="space-y-1.5">
+              {todayEvents.map((event: Record<string, unknown>) => (
+                <div key={event.id as string} className="flex items-center gap-3 rounded-lg bg-zinc-800/50 border border-zinc-700 px-4 py-3">
+                  <span className="text-sm font-mono text-[#1e3c72] min-w-[4rem]">
+                    {new Date(event.start_time as string).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${CATEGORY_BADGE[event.category as string] || "bg-zinc-700 text-zinc-300"}`}>
+                    {event.category as string}
+                  </span>
+                  <span className="text-sm text-zinc-200 flex-1">{event.title as string}</span>
+                  {(event.alarm_enabled as boolean) && <span>🔔</span>}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-zinc-500 px-1">Sin eventos programados para hoy</p>
+          )}
         </section>
 
         {/* ACCESOS RÁPIDOS */}
@@ -86,28 +82,13 @@ export default async function Home() {
   );
 }
 
-function TopicCard({ icon, label, color }: { icon: string; label: string; color: string }) {
-  const bgMap: Record<string, string> = {
-    emerald: "bg-emerald-900/30 border-emerald-700/50",
-    blue: "bg-blue-900/30 border-blue-700/50",
-    purple: "bg-purple-900/30 border-purple-700/50",
-  };
-  return (
-    <div className={`rounded-xl border p-3 text-center ${bgMap[color]}`}>
-      <span className="text-2xl">{icon}</span>
-      <p className="mt-1 text-xs font-medium text-zinc-300">{label}</p>
-    </div>
-  );
-}
-
-function BriefingRow({ icon, text }: { icon: string; text: string }) {
-  return (
-    <div className="flex items-center gap-3 rounded-lg bg-zinc-800/50 px-4 py-3">
-      <span className="text-lg">{icon}</span>
-      <p className="text-sm text-zinc-300">{text}</p>
-    </div>
-  );
-}
+const CATEGORY_BADGE: Record<string, string> = {
+  salud: "bg-emerald-900/50 text-emerald-300",
+  sociales: "bg-blue-900/50 text-blue-300",
+  gremial: "bg-purple-900/50 text-purple-300",
+  admin: "bg-zinc-700 text-zinc-300",
+  urgente: "bg-red-900/50 text-red-300",
+};
 
 function QuickLink({ href, icon, label, sub }: { href: string; icon: string; label: string; sub: string }) {
   return (
