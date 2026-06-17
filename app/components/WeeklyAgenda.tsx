@@ -1,6 +1,8 @@
+// [REFACTOR v0.2.0]: WeeklyAgenda redesign — Integra Mutual brand identity
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import EmptyState from "./EmptyState";
 
 type Event = {
   id: string;
@@ -8,14 +10,7 @@ type Event = {
   start_time: string;
   category: string;
   alarm_enabled: boolean;
-};
-
-const CATEGORY_BADGE: Record<string, string> = {
-  salud: "bg-emerald-900/50 text-emerald-300",
-  sociales: "bg-blue-900/50 text-blue-300",
-  gremial: "bg-purple-900/50 text-purple-300",
-  admin: "bg-zinc-700 text-zinc-300",
-  urgente: "bg-red-900/50 text-red-300",
+  urgente?: boolean;
 };
 
 function fmtDate(d: Date) { return d.toISOString().split("T")[0]; }
@@ -32,7 +27,13 @@ function getWeekDays() {
   });
 }
 
-export default function WeeklyAgenda() {
+/** Formato 24hs: HH:MM */
+function fmtTime(iso: string) {
+  const d = new Date(iso);
+  return d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false });
+}
+
+export default function WeeklyAgenda({ embedded }: { embedded?: boolean }) {
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedDay, setSelectedDay] = useState<string>(fmtDate(new Date()));
   const weekDays = getWeekDays();
@@ -46,30 +47,36 @@ export default function WeeklyAgenda() {
 
   const dayEvents = events.filter((e) => fmtDate(new Date(e.start_time)) === selectedDay);
 
+  const weekDayNames = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
+
   return (
     <>
       {/* Day selector */}
-      <div className="flex gap-1.5 overflow-x-auto py-1">
+      <div className="flex gap-1.5 overflow-x-auto py-1 mb-3">
         {weekDays.map((d) => {
           const ds = fmtDate(d);
-          const today = fmtDate(new Date());
-          const isToday = ds === today;
+          const isToday = ds === fmtDate(new Date());
           const isSelected = ds === selectedDay;
 
           return (
             <button
               key={ds}
               onClick={() => setSelectedDay(ds)}
-              className={`flex-shrink-0 rounded-xl px-4 py-2.5 text-xs font-medium transition-colors ${
-                isSelected
-                  ? "bg-[#1e3c72] text-white"
+              className="flex-shrink-0 rounded-xl px-4 py-2.5 text-xs font-medium transition-all"
+              style={{
+                background: isSelected
+                  ? "var(--accent-green)"
                   : isToday
-                  ? "bg-zinc-700 text-white border border-[#1e3c72]"
-                  : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
-              }`}
+                  ? "var(--bg-card-hover)"
+                  : "var(--bg-card)",
+                color: isSelected ? "#0A1A0A" : isToday ? "#fff" : "var(--text-secondary)",
+                border: isToday && !isSelected
+                  ? "1px solid var(--accent-green)"
+                  : "1px solid transparent",
+              }}
             >
-              <div>{d.toLocaleDateString("es-AR", { weekday: "short" })}</div>
-              <div className="text-lg">{d.getDate()}</div>
+              <div className="text-[10px]">{weekDayNames[d.getDay()]}</div>
+              <div className="text-lg font-semibold">{d.getDate()}</div>
             </button>
           );
         })}
@@ -77,28 +84,60 @@ export default function WeeklyAgenda() {
 
       {/* Agenda */}
       <section>
-        <h2 className="mb-3 text-sm font-semibold text-zinc-300 uppercase tracking-wider">
-          📅 AGENDA DEL DÍA
-        </h2>
         {dayEvents.length > 0 ? (
-          <div className="space-y-1.5">
-            {dayEvents.map((e) => (
-              <div key={e.id} className="flex items-center gap-3 rounded-lg bg-zinc-800/50 border border-zinc-700 px-4 py-3">
-                <span className="text-sm font-mono text-[#1e3c72] min-w-[4rem]">
-                  {new Date(e.start_time).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
-                </span>
-                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${CATEGORY_BADGE[e.category] || "bg-zinc-700 text-zinc-300"}`}>
-                  {e.category}
-                </span>
-                <span className="text-sm text-zinc-200 flex-1">{e.title}</span>
-                {e.alarm_enabled && <span>🔔</span>}
-              </div>
-            ))}
+          <div className="space-y-2">
+            {dayEvents.map((e) => {
+              const isUrgent = e.urgente || e.category === "urgente";
+              return (
+                <div
+                  key={e.id}
+                  className="card flex items-center gap-3 py-3"
+                  style={{
+                    borderLeft: `3px solid ${isUrgent ? "var(--state-error)" : "var(--accent-green)"}`,
+                  }}
+                >
+                  <span
+                    className="text-[13px] font-medium min-w-[3.5rem] tabular-nums"
+                    style={{ color: "var(--accent-green)" }}
+                  >
+                    {fmtTime(e.start_time)}
+                  </span>
+                  <span className="text-[13px] text-white flex-1 font-medium">
+                    {e.title}
+                  </span>
+                  {isUrgent && (
+                    <span
+                      className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase"
+                      style={{
+                        background: "rgba(255,92,92,0.20)",
+                        color: "var(--state-error)",
+                      }}
+                    >
+                      Urgente
+                    </span>
+                  )}
+                  {e.alarm_enabled && (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-muted)" }}>
+                      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                    </svg>
+                  )}
+                </div>
+              );
+            })}
           </div>
         ) : (
-          <p className="text-sm text-zinc-500 px-1">Sin eventos para este día</p>
+          <EmptyState
+            icono={
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            }
+            titulo="Sin eventos para hoy"
+            subtitulo="Usá el calendario para crear nuevos eventos"
+          />
         )}
       </section>
     </>
   );
 }
+

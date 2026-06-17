@@ -1,17 +1,24 @@
+// [REFACTOR v0.2.0]: IA Chat redesign — Integra Mutual brand identity
 "use client";
 
 import { useState } from "react";
 
+const SUGGESTED_CHIPS = [
+  "¿Cuál es el servicio más caro?",
+  "¿Eventos urgentes esta semana?",
+  "¿Cuántos servicios sin precio?",
+  "Resumen operativo de hoy",
+  "¿Costo promedio para socio Activo?",
+];
+
 export default function ChatPage() {
-  const [messages, setMessages] = useState<{ role: "user" | "assistant"; text: string }[]>([
-    { role: "assistant", text: "Hola, soy el asistente de Integra. Preguntame sobre servicios, precios, eventos o la matriz de costos. Solo respondo con datos reales de la base de datos." },
-  ]);
+  const [messages, setMessages] = useState<{ role: "user" | "assistant"; text: string }[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function send() {
-    if (!input.trim() || loading) return;
-    const q = input.trim();
+  async function send(query?: string) {
+    const q = (query || input).trim();
+    if (!q || loading) return;
     setInput("");
     setMessages((m) => [...m, { role: "user", text: q }]);
     setLoading(true);
@@ -31,32 +38,133 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#0f1117] pb-20">
-      <header className="border-b border-zinc-800 px-5 py-4">
-        <h1 className="text-lg font-bold text-white">IA CHAT</h1>
-        <p className="text-xs text-zinc-500">Basado en datos reales de la mutual</p>
+    <div className="flex min-h-screen flex-col pb-20" style={{ background: "var(--bg-base)" }}>
+      {/* Header */}
+      <header
+        className="px-5 py-4"
+        style={{ borderBottom: "1px solid var(--border)" }}
+      >
+        <h1 className="text-[20px] font-bold text-white">IA CHAT</h1>
+        <p className="mt-0.5 text-[13px]" style={{ color: "var(--text-secondary)" }}>
+          Basado en datos reales de la mutual
+        </p>
       </header>
 
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
-        {messages.map((m, i) => (
-          <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[85%] rounded-xl px-4 py-3 text-sm ${
-              m.role === "user" ? "bg-[#1e3c72] text-white" : "bg-zinc-800/80 text-zinc-200 border border-zinc-700"
-            }`}>
-              {m.text}
+      {/* Messages area */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+        {messages.length === 0 ? (
+          /* Empty state */
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+            <div
+              className="mb-5 w-16 h-16 rounded-full flex items-center justify-center"
+              style={{ background: "var(--accent-green-soft)" }}
+            >
+              <svg
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--accent-green)"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 2a10 10 0 1 0 10 10H12V2z" />
+                <path d="M12 2a10 10 0 0 1 10 10h-10V2z" />
+              </svg>
+            </div>
+            <p className="text-base font-semibold text-white">
+              Hola, soy el asistente de Integra
+            </p>
+            <p
+              className="mt-1 text-[13px]"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              Preguntame sobre servicios, precios o tu agenda
+            </p>
+
+            {/* Suggested chips */}
+            <div className="flex flex-wrap justify-center gap-2 mt-5 max-w-sm">
+              {SUGGESTED_CHIPS.map((chip) => (
+                <button
+                  key={chip}
+                  onClick={() => send(chip)}
+                  className="chip"
+                >
+                  {chip}
+                </button>
+              ))}
             </div>
           </div>
-        ))}
-        {loading && <div className="flex justify-start"><div className="rounded-xl bg-zinc-800/80 px-4 py-3 text-sm text-zinc-400 border border-zinc-700">Pensando...</div></div>}
+        ) : (
+          messages.map((m, i) => (
+            <div
+              key={i}
+              className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+            >
+              <div
+                className="max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed"
+                style={
+                  m.role === "user"
+                    ? {
+                        background: "var(--accent-green-soft)",
+                        border: "1px solid var(--border-accent)",
+                        color: "var(--text-primary)",
+                        borderBottomRightRadius: "4px",
+                      }
+                    : {
+                        background: "var(--bg-card)",
+                        color: "var(--text-primary)",
+                        borderBottomLeftRadius: "4px",
+                      }
+                }
+              >
+                {m.text}
+              </div>
+            </div>
+          ))
+        )}
+        {loading && (
+          <div className="flex justify-start">
+            <div
+              className="rounded-2xl px-4 py-3 text-sm"
+              style={{
+                background: "var(--bg-card)",
+                color: "var(--text-muted)",
+                borderBottomLeftRadius: "4px",
+              }}
+            >
+              Pensando...
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="border-t border-zinc-800 px-4 py-3 pb-4">
+      {/* Input bar */}
+      <div
+        className="px-4 py-3"
+        style={{ borderTop: "1px solid var(--border)" }}
+      >
         <div className="flex gap-2">
-          <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()}
-            placeholder="Preguntá sobre servicios, precios, eventos..." className="flex-1 rounded-lg border border-zinc-600 bg-zinc-700 px-4 py-2.5 text-sm text-white placeholder-zinc-400" />
-          <button onClick={send} disabled={loading} className="rounded-lg bg-[#1e3c72] px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50 transition-colors">Enviar</button>
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && send()}
+            placeholder="Preguntá sobre servicios, precios, eventos..."
+            className="input-field flex-1"
+          />
+          <button
+            onClick={() => send()}
+            disabled={loading}
+            className="btn-primary"
+            style={{ whiteSpace: "nowrap" }}
+          >
+            Enviar
+          </button>
         </div>
       </div>
     </div>
   );
 }
+

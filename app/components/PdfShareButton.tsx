@@ -137,18 +137,20 @@ export default function PdfShareButton({ matrix }: { matrix: unknown[] }) {
       <button
         onClick={handleExport}
         disabled={loading}
-        className="flex items-center gap-2 rounded-lg bg-[#2ecc71] px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50 transition-colors"
+        className="btn-primary text-sm"
+        style={{ padding: "8px 16px" }}
       >
         {loading ? "⏳" : "📄"} Exportar PDF
       </button>
       <button
         onClick={handleWhatsApp}
         disabled={loading}
-        className="flex items-center gap-2 rounded-lg bg-[#25D366] px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50 transition-colors"
+        className="btn-secondary text-sm"
+        style={{ padding: "8px 16px" }}
       >
         {loading ? "⏳" : "💬"} WhatsApp
       </button>
-      {error && <p className="text-xs text-red-400">{error}</p>}
+      {error && <p className="text-xs" style={{ color: "var(--state-error)" }}>{error}</p>}
     </div>
   );
 }

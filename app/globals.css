@@ -1,10 +1,273 @@
 @import "tailwindcss";
 
+/* ================================================================
+   [REFACTOR v0.2.0]: Design system basado en identidad de marca Integra Mutual.
+   Paleta oficial del folleto institucional.
+   ================================================================ */
+
 :root {
-  --color-azul: #1e3c72;
-  --color-verde: #2ecc71;
+  /* Fondos */
+  --bg-base: #1E35CC;
+  --bg-card: #2A44D6;
+  --bg-card-hover: #3050E0;
+  --bg-overlay: rgba(255, 255, 255, 0.07);
+
+  /* Texto */
+  --text-primary: #FFFFFF;
+  --text-secondary: rgba(255, 255, 255, 0.70);
+  --text-muted: rgba(255, 255, 255, 0.40);
+
+  /* Acento verde (identidad de marca) */
+  --accent-green: #00D47A;
+  --accent-green-dark: #00A85F;
+  --accent-green-soft: rgba(0, 212, 122, 0.15);
+
+  /* Estados */
+  --state-error: #FF5C5C;
+  --state-warning: #FFB800;
+  --state-success: #00D47A;
+
+  /* Bordes */
+  --border: rgba(255, 255, 255, 0.12);
+  --border-accent: rgba(0, 212, 122, 0.40);
+}
+
+/* Reset básico */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-poppins), sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar estilizada */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-card);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-green);
+  border-radius: 3px;
+}
+
+/* ================================================================
+   CLASES UTILITARIAS DEL DESIGN SYSTEM
+   ================================================================ */
+
+/* Cards */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.card-accent {
+  border-color: var(--border-accent);
+}
+
+/* Botones */
+.btn-primary {
+  background: var(--accent-green);
+  color: #0A1A0A;
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-weight: 600;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-primary:hover {
+  background: var(--accent-green-dark);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--accent-green);
+  border: 1.5px solid var(--accent-green);
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-secondary:hover {
+  background: var(--accent-green-soft);
+}
+
+.btn-ghost {
+  background: var(--bg-overlay);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Badge numerado */
+.badge-number {
+  background: var(--accent-green);
+  color: #0A1A0A;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Label de sección */
+.section-label {
+  color: var(--accent-green);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+/* Inputs */
+.input-field {
+  background: var(--bg-overlay);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-primary);
+  padding: 12px 16px;
+  font-family: var(--font-poppins), sans-serif;
+  font-size: 14px;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input-field:focus {
+  border-color: var(--accent-green);
+}
+
+.input-field::placeholder {
+  color: var(--text-muted);
+}
+
+/* FAB (Floating Action Button) */
+.fab {
+  background: var(--accent-green);
+  color: #0A1A0A;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  position: fixed;
+  z-index: 40;
+}
+
+.fab:hover {
+  background: var(--accent-green-dark);
+  transform: scale(1.05);
+}
+
+/* Toast */
+.toast-success {
+  background: var(--accent-green-soft);
+  border: 1px solid var(--accent-green);
+  color: var(--text-primary);
+}
+
+.toast-error {
+  background: rgba(255, 92, 92, 0.15);
+  border: 1px solid var(--state-error);
+  color: var(--text-primary);
+}
+
+/* Chip / pill */
+.chip {
+  background: var(--bg-card);
+  border: 1px solid var(--border-accent);
+  color: var(--accent-green);
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.chip:hover {
+  background: var(--bg-card-hover);
+}
+
+/* Utilidades */
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-accent {
+  color: var(--accent-green);
+}
+
+.bg-base {
+  background: var(--bg-base);
+}
+
+.bg-card {
+  background: var(--bg-card);
+}
+
+.border-brand {
+  border-color: var(--border);
+}
+
+.border-accent-brand {
+  border-color: var(--border-accent);
 }

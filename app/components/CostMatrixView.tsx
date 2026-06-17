@@ -1,3 +1,4 @@
+// [REFACTOR v0.2.0]: CostMatrixView redesign — Integra Mutual brand identity
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
@@ -19,7 +20,7 @@ const PARTNER_HEADERS = [
   { key: "integra_90", label: "Integra 90", desc: "Precio base" },
   { key: "integra_180", label: "Integra 180", desc: "30% desc." },
   { key: "integra_360", label: "Integra 360", desc: "40% desc." },
-  { key: "integra_360_plus", label: "Integra 360 Plus", desc: "A confirmar" },
+  { key: "integra_360_plus", label: "360 Plus", desc: "A confirmar" },
 ] as const;
 
 export default function CostMatrixView() {
@@ -37,33 +38,26 @@ export default function CostMatrixView() {
 
   useEffect(() => { loadMatrix(); }, [loadMatrix]);
 
-  // Grupos únicos para filtro (memoizado)
   const groups = useMemo(
     () => ["todas", ...new Set(rows.map((r) => r.group_name).filter(Boolean))],
     [rows]
   );
 
-  // Filtrado y agrupado (memoizado)
   const filtered = useMemo(() => {
     let result = rows;
-
     if (search) {
       const s = search.toLowerCase();
       result = result.filter((r) => r.name.toLowerCase().includes(s));
     }
-
     if (groupFilter !== "todas") {
       result = result.filter((r) => r.group_name === groupFilter);
     }
-
-    // Agrupar por group_name
     const grouped: Record<string, MatrixRow[]> = {};
     result.forEach((r) => {
       const g = r.group_name || "Sin grupo";
       if (!grouped[g]) grouped[g] = [];
       grouped[g].push(r);
     });
-
     return grouped;
   }, [rows, search, groupFilter]);
 
@@ -72,69 +66,110 @@ export default function CostMatrixView() {
     return `$${val.toFixed(2)}`;
   }
 
+  /** Encontrar el valor más alto de la fila para destacarlo */
+  function getMaxInRow(row: MatrixRow): number {
+    const vals = PARTNER_HEADERS.map((h) => {
+      const v = row[h.key as keyof MatrixRow] as number | null;
+      return v ?? 0;
+    });
+    return Math.max(...vals);
+  }
+
+  const flatCount = Object.values(filtered).flat().length;
+
   return (
-    <div className="rounded-xl bg-white shadow-sm">
+    <div className="min-h-screen pb-24" style={{ background: "var(--bg-base)" }}>
       {/* Cabecera */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b px-6 py-4">
-        <h2 className="text-lg font-semibold text-[#1e3c72]">Matriz de Costos</h2>
+      <div
+        className="flex flex-wrap items-center justify-between gap-4 px-5 py-4"
+        style={{ borderBottom: "1px solid var(--border)" }}
+      >
+        <h2 className="text-[20px] font-bold text-white">Matriz de Costos</h2>
         <div className="flex gap-2">
-          <a
-            href="/matriz/cargar"
-            className="rounded-lg bg-[#2ecc71] px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600 transition-colors"
-          >
-            + Cargar Servicio
-          </a>
+          <PdfShareButton matrix={rows} />
           <button
             onClick={loadMatrix}
-            className="rounded-lg border px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800 transition-colors"
+            className="btn-ghost text-sm"
+            title="Disponible cuando hay cambios pendientes"
           >
             ↻ Recalcular
           </button>
-          <PdfShareButton matrix={rows} />
         </div>
       </div>
 
       {/* Filtros */}
-      <div className="flex flex-wrap gap-3 border-b px-6 py-3">
-        <input
-          type="text"
-          placeholder="Buscar servicio..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="min-w-[200px] rounded-lg border px-3 py-1.5 text-sm"
-        />
+      <div className="flex flex-wrap gap-3 px-5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
+        <div className="relative flex-1 min-w-[160px]">
+          <svg
+            className="absolute left-3 top-1/2 -translate-y-1/2"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ color: "var(--text-muted)" }}
+          >
+            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Buscar servicio..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="input-field pl-10"
+          />
+        </div>
         <select
           value={groupFilter}
           onChange={(e) => setGroupFilter(e.target.value)}
-          className="rounded-lg border px-3 py-1.5 text-sm"
+          className="input-field w-auto"
+          style={{ appearance: "auto" }}
         >
           {groups.map((g) => (
-            <option key={g} value={g}>{g === "todas" ? "Todas las categorías" : g}</option>
+            <option key={g} value={g} style={{ background: "#1E35CC", color: "#fff" }}>
+              {g === "todas" ? "Todas las categorías" : g}
+            </option>
           ))}
         </select>
-        <span className="self-center text-xs text-zinc-400">
-          {Object.values(filtered).flat().length} servicios
+        <span className="self-center text-xs" style={{ color: "var(--text-muted)" }}>
+          {flatCount} servicios
         </span>
       </div>
 
       {/* Tabla */}
       <div className="overflow-x-auto">
+        {/* Scroll indicator */}
+        <div className="block sm:hidden px-5 py-1.5 text-[11px] text-center" style={{ color: "var(--text-muted)" }}>
+          ← deslizá →
+        </div>
+
         {loading ? (
-          <p className="p-8 text-center text-sm text-zinc-400">Cargando matriz...</p>
+          <p className="p-8 text-center text-sm" style={{ color: "var(--text-muted)" }}>
+            Cargando matriz...
+          </p>
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-zinc-50">
-                <th className="px-4 py-3 text-left font-semibold text-[#1e3c72]">Servicio</th>
+              <tr style={{ borderBottom: "1px solid var(--border)" }}>
+                <th
+                  className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider"
+                  style={{ color: "var(--accent-green)" }}
+                >
+                  Servicio
+                </th>
                 {PARTNER_HEADERS.map((h) => (
                   <th
                     key={h.key}
-                    className={`px-3 py-3 text-right font-semibold ${
-                      h.key === "integra_360_plus" ? "text-zinc-400" : "text-[#1e3c72]"
-                    }`}
+                    className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider"
+                    style={{ color: "var(--accent-green)" }}
                   >
                     <div>{h.label}</div>
-                    <div className="text-xs font-normal text-zinc-400">{h.desc}</div>
+                    <div className="text-[10px] font-normal mt-0.5" style={{ color: "var(--text-muted)" }}>
+                      {h.desc}
+                    </div>
                   </th>
                 ))}
               </tr>
@@ -142,7 +177,7 @@ export default function CostMatrixView() {
             <tbody>
               {Object.keys(filtered).length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-zinc-400">
+                  <td colSpan={6} className="px-4 py-12 text-center text-sm" style={{ color: "var(--text-muted)" }}>
                     Sin servicios para mostrar
                   </td>
                 </tr>
@@ -150,35 +185,62 @@ export default function CostMatrixView() {
                 Object.entries(filtered).map(([group, groupRows]) => (
                   <>
                     {/* Fila de grupo */}
-                    <tr key={`g-${group}`} className="border-b bg-[#1e3c72]/5">
-                      <td colSpan={6} className="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-[#1e3c72]">
+                    <tr key={`g-${group}`} style={{ borderBottom: "1px solid var(--border)" }}>
+                      <td
+                        colSpan={6}
+                        className="px-4 py-2 text-xs font-semibold uppercase tracking-wider"
+                        style={{ background: "var(--bg-overlay)", color: "var(--accent-green)" }}
+                      >
                         {group}
                       </td>
                     </tr>
                     {/* Filas de servicios */}
-                    {groupRows.map((row) => (
-                      <tr key={row.id} className="border-b hover:bg-zinc-50 transition-colors">
-                        <td className="px-4 py-2.5 font-medium text-zinc-700">{row.name}</td>
-                        {PARTNER_HEADERS.map((h) => (
-                          <td
-                            key={h.key}
-                            className={`px-3 py-2.5 text-right tabular-nums ${
-                              h.key === "integra_360_plus"
-                                ? row.integra_360_plus == null
-                                  ? "italic text-zinc-300"
-                                  : "text-zinc-400"
-                                : h.key === "integra_90"
-                                ? "font-semibold text-[#1e3c72]"
-                                : "text-zinc-600"
-                            }`}
-                          >
-                            {h.key === "integra_360_plus" && row.integra_360_plus == null
-                              ? "A confirmar"
-                              : formatPrice(row[h.key as keyof MatrixRow] as number | null)}
+                    {groupRows.map((row) => {
+                      const maxVal = getMaxInRow(row);
+                      return (
+                        <tr
+                          key={row.id}
+                          className="transition-colors"
+                          style={{
+                            borderBottom: "1px solid var(--border)",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = "var(--bg-card)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = "transparent";
+                          }}
+                        >
+                          <td className="px-4 py-2.5 font-medium text-white text-[13px]">
+                            {row.name}
                           </td>
-                        ))}
-                      </tr>
-                    ))}
+                          {PARTNER_HEADERS.map((h) => {
+                            const val = row[h.key as keyof MatrixRow] as number | null;
+                            const isMax = val != null && val === maxVal && maxVal > 0;
+                            const isZero = val == null || val === 0;
+                            const isPending = h.key === "integra_360_plus" && val == null;
+                            return (
+                              <td
+                                key={h.key}
+                                className="px-3 py-2.5 text-right tabular-nums text-[13px]"
+                                style={{
+                                  color: isPending
+                                    ? "var(--text-muted)"
+                                    : isMax
+                                    ? "var(--accent-green)"
+                                    : isZero
+                                    ? "var(--text-muted)"
+                                    : "var(--text-primary)",
+                                  fontWeight: isMax ? 600 : 400,
+                                }}
+                              >
+                                {isPending ? "A confirmar" : formatPrice(val)}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
                   </>
                 ))
               )}
@@ -186,6 +248,17 @@ export default function CostMatrixView() {
           </table>
         )}
       </div>
+
+      {/* FAB — Cargar Servicio */}
+      <a
+        href="/matriz/cargar"
+        className="fab"
+        style={{ bottom: "6rem", right: "1.25rem" }}
+        title="Cargar Servicio"
+      >
+        +
+      </a>
     </div>
   );
 }
+
