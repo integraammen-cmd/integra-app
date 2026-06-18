@@ -37,16 +37,17 @@ function fmtTime24(iso: string) {
   return d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false });
 }
 
+// [FIX v0.2.2]: timestamp completo, date picker, sin campo Fin
 export default function WeeklyCalendar() {
   const [events, setEvents] = useState<Event[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
     title: "",
     start_time: "",
-    end_time: "",
     category: "admin" as Event["category"],
     alarm_enabled: false,
   });
+  const [selectedDate, setSelectedDate] = useState<string>(fmtDate(new Date()));
   const [error, setError] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState<string>(fmtDate(new Date()));
   const [toast, setToast] = useState<{ mensaje: string; tipo: "success" | "error"; visible: boolean }>({
@@ -67,7 +68,7 @@ export default function WeeklyCalendar() {
 
   const dayEvents = events.filter((e) => fmtDate(new Date(e.start_time)) === selectedDay);
 
-  // Validation
+  // [FIX v0.2.2]: validación solo para start_time (sin end_time)
   function validateTime(time: string): string | null {
     if (!time) return null;
     const hour = parseInt(time.split(":")[0], 10);
@@ -81,23 +82,29 @@ export default function WeeklyCalendar() {
     e.preventDefault();
     setError(null);
 
-    // Validate required name
     if (!form.title.trim()) {
       setError("El nombre es requerido");
       return;
     }
 
-    // Validate time range
-    const timeErr = validateTime(form.start_time) || (form.end_time ? validateTime(form.end_time) : null);
+    const timeErr = validateTime(form.start_time);
     if (timeErr) {
       setError(timeErr);
       return;
     }
 
+    // [FIX v0.2.2]: construir timestamp completo con fecha + hora + tz
+    const startTimestamp = `${selectedDate}T${form.start_time}:00-03:00`;
+
     const res = await fetch("/api/events", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({
+        title: form.title,
+        start_time: startTimestamp,
+        category: form.category,
+        alarm_enabled: form.alarm_enabled,
+      }),
     });
     if (!res.ok) {
       const errMsg = (await res.json()).error;
@@ -107,7 +114,7 @@ export default function WeeklyCalendar() {
     }
     setToast({ mensaje: "Evento creado correctamente", tipo: "success", visible: true });
     setShowForm(false);
-    setForm({ title: "", start_time: "", end_time: "", category: "admin", alarm_enabled: false });
+    setForm({ title: "", start_time: "", category: "admin", alarm_enabled: false });
     loadEvents();
   }
 
@@ -294,7 +301,11 @@ export default function WeeklyCalendar() {
 
       {/* FAB */}
       <button
-        onClick={() => setShowForm(!showForm)}
+        onClick={() => {
+          // [FIX v0.2.2]: sincronizar fecha del form con día seleccionado
+          setSelectedDate(selectedDay);
+          setShowForm(!showForm);
+        }}
         className="fab"
         style={{ bottom: "5rem", right: "1.25rem" }}
       >
@@ -316,25 +327,31 @@ export default function WeeklyCalendar() {
                 style={!form.title.trim() && error ? { borderColor: "var(--state-error)" } : undefined}
                 autoFocus
               />
+              {/* [FIX v0.2.2]: selector de fecha antes de la hora */}
               <div>
-                <label className="text-xs font-medium text-white/60 mb-1 block">Inicio</label>
+                <label className="text-xs font-medium text-white/60 mb-1 block">Fecha</label>
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="input-field"
+                  style={{
+                    background: "var(--bg-card)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "10px",
+                    color: "var(--text-primary)",
+                    padding: "12px 16px",
+                  }}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-white/60 mb-1 block">Hora</label>
                 <input
                   type="time"
                   min="07:00"
                   max="21:00"
                   value={form.start_time}
                   onChange={(e) => setForm({ ...form, start_time: e.target.value })}
-                  className="input-field"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-white/60 mb-1 block">Fin (opcional)</label>
-                <input
-                  type="time"
-                  min="07:00"
-                  max="21:00"
-                  value={form.end_time}
-                  onChange={(e) => setForm({ ...form, end_time: e.target.value })}
                   className="input-field"
                 />
               </div>

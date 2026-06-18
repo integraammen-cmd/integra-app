@@ -21,16 +21,18 @@ function buildPDF(matrix: MatrixRow[]): jsPDF {
   const today = new Date().toLocaleDateString("es-AR");
 
   doc.setFontSize(14);
+  // [FIX v0.2.2]: RGB explícito para evitar texto invisible
   doc.setTextColor(10, 15, 46);
   doc.text("INTEGRA MUTUAL — Tarifas por Plan", 10, 15);
   doc.setFontSize(9);
-  doc.setTextColor(100);
+  doc.setTextColor(100, 100, 100);
   doc.text(`Actualizado: ${today}`, 10, 22);
 
   const colW = [35, 60, 22, 22, 22, 22, 22];
 
   doc.setFillColor(10, 15, 46);
-  doc.setTextColor(255);
+  // [FIX v0.2.2]: RGB explícito — texto blanco sobre fondo oscuro
+  doc.setTextColor(255, 255, 255);
   doc.setFontSize(8);
   let x = 10;
   const headers = ["Grupo", "Servicio", "Activo", "Integra 90", "Integra 180", "Integra 360", "360 Plus"];
@@ -40,7 +42,8 @@ function buildPDF(matrix: MatrixRow[]): jsPDF {
     x += colW[i];
   });
 
-  doc.setTextColor(40);
+  // [FIX v0.2.2]: RGB explícito — texto oscuro sobre fondo claro
+  doc.setTextColor(40, 40, 40);
   doc.setFontSize(7);
   let y = 37;
   matrix.forEach((row, ri) => {
