@@ -134,7 +134,7 @@ export default function Home() {
         top = row;
       }
     });
-    return top;
+    return top as MatrixRow | null;
   }, [matrix]);
 
   // --- Recent prices (últimos 3 con precio) ---
