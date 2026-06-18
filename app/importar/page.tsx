@@ -85,7 +85,7 @@ export default function ImportarPage() {
 
   useEffect(() => {
     loadImports();
-    fetch("/api/services").then((r) => r.ok && r.json().then(setServices));
+    fetch("/api/services").then((r) => { if (r.ok) r.json().then(setServices); });
   }, [loadImports]);
 
   // --- Parseo ---
