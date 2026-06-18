@@ -118,6 +118,72 @@ Arquitectura respetada según ARCHITECTURE.md.
 PSAI v1.3 no requiere cambios en este ciclo.
 Gráficos implementados con SVG y divs puros — sin recharts ni chart.js.
 
+## [0.2.1] — 2026-06-17
+
+### Tipo: FIX
+### Autor: Coordinador General (asistido por Claude — Anthropic)
+### Estado: EN PROGRESO
+### Prompt ejecutado en: DeepSeek V3 Pro vía GitHub Copilot Free (VS Code)
+
+---
+
+### Motivación
+Post-deploy de v0.2.0 se detectaron 5 problemas críticos:
+fondo azul saturado agotador para uso diario, contenido pegado
+a los bordes sin padding, input del chat tapado por la navbar,
+exportación PDF con campos "undefined", y WhatsApp enviando
+texto en lugar del archivo PDF real.
+Se cambia la paleta de fondo de azul royal #1E35CC a azul noche
+#0A0F2E, manteniendo el verde #00D47A como acento de marca.
+
+---
+
+### Cambios
+
+#### 🎨 Paleta actualizada
+- [ ] Fondo: #1E35CC → #0A0F2E (azul noche, elegido por el usuario)
+- [ ] Cards: #2A44D6 → #111835
+- [ ] Card hover: #3050E0 → #1A2445
+- [ ] Agregado: --accent-blue: #3B82F6
+
+#### 🔧 Fixes
+- [ ] Padding lateral 16px en todas las pantallas
+- [ ] Padding-bottom 80px en todas las páginas (espacio para navbar)
+- [ ] IA Chat: input fijo a bottom: 65px, no tapado por navbar
+- [ ] PDF: campos undefined corregidos con operador ??
+- [ ] WhatsApp: comparte el PDF real usando Web Share API
+      con fallback a wa.me para browsers sin soporte
+
+---
+
+### Archivos modificados
+
+| Archivo | Tipo de cambio |
+|---|---|
+| /app/globals.css | MODIFICADO — paleta + page-container |
+| /app/(dashboard)/page.tsx | MODIFICADO — padding |
+| /app/(dashboard)/calendario/page.tsx | MODIFICADO — padding |
+| /app/(dashboard)/ia-chat/page.tsx | MODIFICADO — padding + fix input |
+| /app/(dashboard)/informes/page.tsx | MODIFICADO — padding + PDF + WhatsApp |
+| /app/(dashboard)/ajustes/page.tsx | MODIFICADO — padding |
+
+---
+
+### QA pendiente
+
+- [ ] Fondo azul noche en todas las pantallas
+- [ ] Contenido con margen lateral visible en mobile
+- [ ] Input del chat visible sobre la navbar
+- [ ] PDF exporta nombres y grupos correctamente
+- [ ] WhatsApp abre selector de compartir con el PDF adjunto
+- [ ] Sin errores en consola
+
+---
+
+### Notas
+Paleta elegida por el Coordinador General a partir de
+comparador visual interactivo generado con Claude.  
+
 ## [0.2.0] — 2026-06-17
 
 ### Tipo: REFACTOR
