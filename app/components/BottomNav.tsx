@@ -1,4 +1,9 @@
 // [FEATURE v0.3.0]: Navbar con 6 ítems — agregado Importar
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
 const NAV_ITEMS = [
   {
     href: "/",
