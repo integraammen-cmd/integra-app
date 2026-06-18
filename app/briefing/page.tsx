@@ -38,11 +38,14 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col pb-20" style={{ background: "var(--bg-base)" }}>
+    <div className="page-container" style={{ background: "var(--bg-base)", minHeight: "100vh" }}>
       {/* Header */}
       <header
-        className="px-5 py-4"
-        style={{ borderBottom: "1px solid var(--border)" }}
+        style={{
+          borderBottom: "1px solid var(--border)",
+          padding: "16px 16px 8px 16px",
+          margin: "0 -16px",
+        }}
       >
         <h1 className="text-[20px] font-bold text-white">IA CHAT</h1>
         <p className="mt-0.5 text-[13px]" style={{ color: "var(--text-secondary)" }}>
@@ -51,7 +54,10 @@ export default function ChatPage() {
       </header>
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+      <div
+        className="overflow-y-auto px-4 py-4 space-y-3"
+        style={{ height: "calc(100vh - 120px)" }}
+      >
         {messages.length === 0 ? (
           /* Empty state */
           <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
@@ -140,10 +146,18 @@ export default function ChatPage() {
         )}
       </div>
 
-      {/* Input bar */}
+      {/* Input bar — fijo sobre navbar */}
       <div
-        className="px-4 py-3"
-        style={{ borderTop: "1px solid var(--border)" }}
+        style={{
+          position: "fixed",
+          bottom: "65px",
+          left: 0,
+          right: 0,
+          padding: "8px 16px",
+          background: "var(--bg-base)",
+          borderTop: "1px solid var(--border)",
+          zIndex: 40,
+        }}
       >
         <div className="flex gap-2">
           <input

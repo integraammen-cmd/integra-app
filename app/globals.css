@@ -1,15 +1,15 @@
 @import "tailwindcss";
 
 /* ================================================================
-   [REFACTOR v0.2.0]: Design system basado en identidad de marca Integra Mutual.
-   Paleta oficial del folleto institucional.
+   [FIX v0.2.1]: Paleta actualizada — fondo más oscuro #0A0F2E.
+   Design system basado en identidad de marca Integra Mutual.
    ================================================================ */
 
 :root {
   /* Fondos */
-  --bg-base: #1E35CC;
-  --bg-card: #2A44D6;
-  --bg-card-hover: #3050E0;
+  --bg-base: #0A0F2E;
+  --bg-card: #111835;
+  --bg-card-hover: #1A2445;
   --bg-overlay: rgba(255, 255, 255, 0.07);
 
   /* Texto */
@@ -21,6 +21,9 @@
   --accent-green: #00D47A;
   --accent-green-dark: #00A85F;
   --accent-green-soft: rgba(0, 212, 122, 0.15);
+
+  /* Acento azul (secundario) */
+  --accent-blue: #3B82F6;
 
   /* Estados */
   --state-error: #FF5C5C;
@@ -270,4 +273,10 @@ body {
 
 .border-accent-brand {
   border-color: var(--border-accent);
+}
+
+/* [FIX v0.2.1]: Page container — padding lateral consistente */
+.page-container {
+  padding: 0 16px;
+  padding-bottom: 80px;
 }

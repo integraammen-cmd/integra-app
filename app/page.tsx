@@ -150,11 +150,15 @@ export default function Home() {
   const greeting = hour < 12 ? "Buenos días" : hour < 19 ? "Buenas tardes" : "Buenas noches";
 
   return (
-    <div className="flex min-h-screen flex-col pb-24" style={{ background: "var(--bg-base)" }}>
+    <div className="flex min-h-screen flex-col pb-24 page-container" style={{ background: "var(--bg-base)" }}>
       {/* Header */}
       <header
-        className="px-5 py-4"
-        style={{ borderBottom: "1px solid var(--border)" }}
+        className="py-4"
+        style={{
+          borderBottom: "1px solid var(--border)",
+          padding: "16px 16px 8px 16px",
+          margin: "0 -16px",
+        }}
       >
         <div className="flex items-start justify-between">
           <div>
@@ -192,7 +196,7 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="flex-1 space-y-5 px-5 py-4">
+      <main className="flex-1 space-y-5 py-4">
         {/* Sección A — KPI Cards (2x2 grid) */}
         <div className="grid grid-cols-2 gap-3">
           <KPICard

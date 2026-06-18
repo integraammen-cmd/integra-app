@@ -24,8 +24,9 @@ export default function BiometricGate({
           className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
             isEditable
               ? "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
-              : "bg-[#1e3c72] text-white hover:bg-blue-900"
+              : "btn-primary text-sm"
           }`}
+          style={isEditable ? undefined : { padding: "8px 16px" }}
         >
           <span className="text-lg">
             {isEditable ? "🔒" : isAuthenticating ? "⏳" : "🖐️"}

@@ -129,7 +129,7 @@ export default function CostMatrixView() {
           style={{ appearance: "auto" }}
         >
           {groups.map((g) => (
-            <option key={g} value={g} style={{ background: "#1E35CC", color: "#fff" }}>
+            <option key={g} value={g} style={{ background: "#0A0F2E", color: "#fff" }}>
               {g === "todas" ? "Todas las categorías" : g}
             </option>
           ))}

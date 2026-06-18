@@ -1,11 +1,14 @@
+// [FIX v0.2.1]: PdfShareButton — corregido campos undefined + WhatsApp real PDF
 "use client";
 
 import { useState } from "react";
 import { jsPDF } from "jspdf";
 
+/** Estructura real que viene de la API /api/matrix */
 type MatrixRow = {
-  grupo: string;
-  servicio: string;
+  id: string;
+  name: string;
+  group_name: string;
   activo: number | null;
   integra_90: number | null;
   integra_180: number | null;
@@ -13,42 +16,30 @@ type MatrixRow = {
   integra_360_plus: number | null;
 };
 
-function buildPDF(matrix: MatrixRow[]): Blob {
+function buildPDF(matrix: MatrixRow[]): jsPDF {
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
   const today = new Date().toLocaleDateString("es-AR");
 
-  // Títulos
   doc.setFontSize(14);
-  doc.setTextColor(30, 60, 114);
+  doc.setTextColor(10, 15, 46);
   doc.text("INTEGRA MUTUAL — Tarifas por Plan", 10, 15);
   doc.setFontSize(9);
   doc.setTextColor(100);
   doc.text(`Actualizado: ${today}`, 10, 22);
 
-  // Columnas
-  const cols = [
-    { header: "Grupo", dataKey: "grupo" },
-    { header: "Servicio", dataKey: "servicio" },
-    { header: "Activo", dataKey: "activo" },
-    { header: "Integra 90", dataKey: "integra_90" },
-    { header: "Integra 180", dataKey: "integra_180" },
-    { header: "Integra 360", dataKey: "integra_360" },
-    { header: "360 Plus", dataKey: "integra_360_plus" },
-  ];
+  const colW = [35, 60, 22, 22, 22, 22, 22];
 
-  // Encabezados de tabla
-  doc.setFillColor(30, 60, 114);
+  doc.setFillColor(10, 15, 46);
   doc.setTextColor(255);
   doc.setFontSize(8);
   let x = 10;
-  const colW = [35, 60, 22, 22, 22, 22, 22];
-  cols.forEach((c, i) => {
+  const headers = ["Grupo", "Servicio", "Activo", "Integra 90", "Integra 180", "Integra 360", "360 Plus"];
+  headers.forEach((h, i) => {
     doc.rect(x, 27, colW[i], 7, "F");
-    doc.text(c.header, x + 1, 32);
+    doc.text(h, x + 1, 32);
     x += colW[i];
   });
 
-  // Filas
   doc.setTextColor(40);
   doc.setFontSize(7);
   let y = 37;
@@ -57,13 +48,21 @@ function buildPDF(matrix: MatrixRow[]): Blob {
       doc.addPage();
       y = 10;
     }
-    // Fondo alternado
     if (ri % 2 === 0) {
-      doc.setFillColor(245, 245, 250);
+      doc.setFillColor(240, 242, 250);
       doc.rect(10, y - 4, colW.reduce((a, b) => a + b, 0), 5, "F");
     }
     x = 10;
-    const vals = [row.grupo, row.servicio, row.activo != null ? `$${row.activo.toFixed(2)}` : "—", row.integra_90 != null ? `$${row.integra_90.toFixed(2)}` : "—", row.integra_180 != null ? `$${row.integra_180.toFixed(2)}` : "—", row.integra_360 != null ? `$${row.integra_360.toFixed(2)}` : "—", row.integra_360_plus != null ? `$${row.integra_360_plus.toFixed(2)}` : "Pendiente"];
+    // [FIX v0.2.1]: usar name y group_name, con fallback ??
+    const vals = [
+      row.group_name ?? "Sin grupo",
+      row.name ?? "Sin nombre",
+      row.activo != null ? `$${row.activo.toFixed(2)}` : "—",
+      row.integra_90 != null ? `$${row.integra_90.toFixed(2)}` : "—",
+      row.integra_180 != null ? `$${row.integra_180.toFixed(2)}` : "—",
+      row.integra_360 != null ? `$${row.integra_360.toFixed(2)}` : "—",
+      row.integra_360_plus != null ? `$${row.integra_360_plus.toFixed(2)}` : "Pendiente",
+    ];
     vals.forEach((v, i) => {
       doc.text(String(v).substring(0, i === 1 ? 40 : 20), x + 1, y);
       x += colW[i];
@@ -71,8 +70,7 @@ function buildPDF(matrix: MatrixRow[]): Blob {
     y += 5.5;
   });
 
-  const pdfBytes = doc.output("blob");
-  return pdfBytes;
+  return doc;
 }
 
 export default function PdfShareButton({ matrix }: { matrix: unknown[] }) {
@@ -84,7 +82,8 @@ export default function PdfShareButton({ matrix }: { matrix: unknown[] }) {
     setLoading(true);
     setError(null);
     try {
-      const pdfBlob = buildPDF(matrix as MatrixRow[]);
+      const doc = buildPDF(matrix as MatrixRow[]);
+      const pdfBlob = doc.output("blob");
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement("a");
       a.href = url;
@@ -97,32 +96,32 @@ export default function PdfShareButton({ matrix }: { matrix: unknown[] }) {
     setLoading(false);
   }
 
+  // [FIX v0.2.1]: WhatsApp — compartir PDF real via Web Share API
   async function handleWhatsApp() {
     setLoading(true);
     setError(null);
     try {
-      const pdfBlob = buildPDF(matrix as MatrixRow[]);
-      const file = new File([pdfBlob], `Tarifas_Integra_${today.replace(/\//g, "-")}.pdf`, { type: "application/pdf" });
+      const doc = buildPDF(matrix as MatrixRow[]);
+      const pdfBlob = doc.output("blob");
+      const pdfFile = new File(
+        [pdfBlob],
+        "integra-tarifas.pdf",
+        { type: "application/pdf" }
+      );
 
-      // Web Share API: abre WhatsApp directamente en mobile
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
         await navigator.share({
-          title: "Tarifas Planes Integra",
-          text: `Tarifas actualizadas al ${today}`,
-          files: [file],
+          files: [pdfFile],
+          title: "Integra Mutual — Tarifas por Plan",
+          text: "Matriz de costos actualizada",
         });
       } else {
-        // Fallback desktop: descargar PDF + abrir WhatsApp Web
-        const url = URL.createObjectURL(pdfBlob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `Tarifas_Integra_${today.replace(/\//g, "-")}.pdf`;
-        a.click();
-        URL.revokeObjectURL(url);
-        window.open(
-          `https://wa.me/?text=${encodeURIComponent(`Tarifas Planes Integra — ${today}\nSe descargó el PDF. Compartilo manualmente desde tu dispositivo.`)}`,
-          "_blank"
+        // Fallback: abrir WhatsApp Web con texto
+        const texto = encodeURIComponent(
+          "Adjunto la matriz de costos de Integra Mutual. " +
+          "Actualizado: " + today
         );
+        window.open("https://wa.me/?text=" + texto, "_blank");
       }
     } catch (err: unknown) {
       if (err instanceof Error && err.name !== "AbortError") {

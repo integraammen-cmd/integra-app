@@ -344,11 +344,11 @@ export default function WeeklyCalendar() {
                 className="input-field"
                 style={{ appearance: "auto" }}
               >
-                <option value="admin" style={{ background: "#1E35CC", color: "#fff" }}>Admin</option>
-                <option value="salud" style={{ background: "#1E35CC", color: "#fff" }}>Salud</option>
-                <option value="sociales" style={{ background: "#1E35CC", color: "#fff" }}>Sociales</option>
-                <option value="gremial" style={{ background: "#1E35CC", color: "#fff" }}>Gremial</option>
-                <option value="urgente" style={{ background: "#1E35CC", color: "#fff" }}>Urgente</option>
+                <option value="admin" style={{ background: "#0A0F2E", color: "#fff" }}>Admin</option>
+                <option value="salud" style={{ background: "#0A0F2E", color: "#fff" }}>Salud</option>
+                <option value="sociales" style={{ background: "#0A0F2E", color: "#fff" }}>Sociales</option>
+                <option value="gremial" style={{ background: "#0A0F2E", color: "#fff" }}>Gremial</option>
+                <option value="urgente" style={{ background: "#0A0F2E", color: "#fff" }}>Urgente</option>
               </select>
               <label className="flex items-center gap-2 text-sm text-white/70 cursor-pointer">
                 <input

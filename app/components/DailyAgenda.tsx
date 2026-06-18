@@ -129,9 +129,10 @@ export default function DailyAgenda() {
             onClick={() => setFilter(cat)}
             className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
               filter === cat
-                ? "bg-[#1e3c72] text-white"
+                ? "text-white"
                 : "bg-zinc-700 text-zinc-300 hover:bg-zinc-600"
             }`}
+            style={filter === cat ? { background: "var(--accent-green)", color: "#0A1A0A" } : undefined}
           >
             {cat === "todas" ? "Todas" : CATEGORY_LABELS[cat]}
           </button>
@@ -179,7 +180,7 @@ export default function DailyAgenda() {
             </label>
             <button
               type="submit"
-              className="rounded-lg bg-[#1e3c72] px-4 py-2 text-sm font-medium text-white hover:bg-blue-900 transition-colors"
+              className="rounded-lg px-4 py-2 text-sm font-medium transition-colors btn-primary"
             >
               Guardar
             </button>

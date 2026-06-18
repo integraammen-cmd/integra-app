@@ -21,11 +21,12 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // [FIX v0.2.1]: theme-color actualizado al nuevo bg-base
   return (
     <html lang="es">
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#1E35CC" />
+        <meta name="theme-color" content="#0A0F2E" />
       </head>
       <body className={`${poppins.variable} antialiased min-h-screen`}>
         {children}

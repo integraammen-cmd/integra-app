@@ -40,10 +40,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#0f1117]">
+    <div className="flex min-h-screen items-center justify-center" style={{ background: "var(--bg-base)" }}>
       <div className="w-full max-w-sm rounded-xl bg-white p-8 shadow-lg">
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-[#1e3c72]">Integra</h1>
+          <h1 className="text-2xl font-bold" style={{ color: "var(--accent-green)" }}>Integra</h1>
           <p className="mt-2 text-sm text-zinc-500">
             Mutual de Salud y Servicios Sociales
           </p>

@@ -114,11 +114,11 @@ export default function CostMatrixForm({ onSaved }: { onSaved: () => void }) {
             style={{ appearance: "auto" }}
             required
           >
-            <option value="" style={{ background: "#1E35CC", color: "#fff" }}>
+            <option value="" style={{ background: "#0A0F2E", color: "#fff" }}>
               Seleccionar grupo
             </option>
             {groups.map((g) => (
-              <option key={g.id} value={g.id} style={{ background: "#1E35CC", color: "#fff" }}>
+              <option key={g.id} value={g.id} style={{ background: "#0A0F2E", color: "#fff" }}>
                 {g.name}
               </option>
             ))}
