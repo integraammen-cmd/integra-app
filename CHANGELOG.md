@@ -118,6 +118,71 @@ Arquitectura respetada según ARCHITECTURE.md.
 PSAI v1.3 no requiere cambios en este ciclo.
 Gráficos implementados con SVG y divs puros — sin recharts ni chart.js.
 
+## [0.2.3] — 2026-06-17
+
+### Tipo: FIX + FEATURE
+### Autor: Coordinador General (asistido por Claude — Anthropic)
+### Estado: EN PROGRESO
+### Prompt ejecutado en: DeepSeek V3 Pro vía GitHub Copilot Free (VS Code)
+
+---
+
+### Motivación
+Pantalla de Inicio sobrecargada visualmente — se simplifica
+dejando solo los 4 KPI cards y la agenda del día seleccionado.
+Bug crítico de timezone: eventos se mostraban un día antes por
+diferencia UTC vs UTC-3 Argentina. Calendario sin bloques visuales
+en la grilla horaria. Se agrega botón de Estadísticas en el navbar
+como placeholder para la v0.3.0.
+
+---
+
+### Cambios
+
+#### 🔧 Fixes
+- [ ] Inicio: eliminadas estadísticas y resumen operativo
+- [ ] Inicio: selector de días + lista de eventos del día
+- [ ] Bug timezone: eventos aparecían un día antes (UTC sin convertir a UTC-3)
+- [ ] Calendario: eventos pintados como bloques en grilla horaria
+- [ ] Calendario: fix timezone igual que en Inicio
+
+#### ✨ Features
+- [ ] Calendario: vista diaria con flechas ← → para navegar
+- [ ] Calendario: toggle Semana / Día en el header
+- [ ] Navbar: 6to ítem "Estadísticas" con ícono BarChart2
+- [ ] Nueva pantalla /estadisticas — placeholder para v0.3.0
+
+---
+
+### Archivos modificados
+
+| Archivo | Tipo de cambio |
+|---|---|
+| /app/(dashboard)/page.tsx | MODIFICADO — simplificado + timezone |
+| /app/(dashboard)/calendario/page.tsx | MODIFICADO — bloques + toggle + timezone |
+| /app/components/Navbar.tsx | MODIFICADO — 6 ítems |
+| /app/(dashboard)/estadisticas/page.tsx | NUEVO |
+
+---
+
+### QA pendiente
+
+- [ ] Inicio muestra solo KPIs + selector días + lista eventos
+- [ ] Al tocar un día aparecen sus eventos en orden cronológico
+- [ ] Evento cargado el viernes aparece el viernes (no el jueves)
+- [ ] Eventos aparecen como bloques en la grilla del calendario
+- [ ] Toggle Semana/Día funciona correctamente
+- [ ] Vista diaria navega con flechas ← →
+- [ ] Navbar muestra 6 ítems sin romperse en mobile
+- [ ] Pantalla Estadísticas abre sin error
+- [ ] Sin errores en consola
+
+---
+
+### Notas
+Las estadísticas del Inicio se mueven a la pantalla de
+Estadísticas que se implementará completamente en v0.3.0.
+
 ## [0.2.1] — 2026-06-17
 
 ### Tipo: FIX
