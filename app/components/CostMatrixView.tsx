@@ -23,7 +23,8 @@ const PARTNER_HEADERS = [
   { key: "integra_360_plus", label: "360 Plus", desc: "A confirmar" },
 ] as const;
 
-export default function CostMatrixView() {
+// [FEATURE v0.3.0]: soporta prop embedded para modo tab
+export default function CostMatrixView({ embedded }: { embedded?: boolean }) {
   const [rows, setRows] = useState<MatrixRow[]>([]);
   const [search, setSearch] = useState("");
   const [groupFilter, setGroupFilter] = useState("todas");
@@ -78,24 +79,26 @@ export default function CostMatrixView() {
   const flatCount = Object.values(filtered).flat().length;
 
   return (
-    <div className="min-h-screen pb-24" style={{ background: "var(--bg-base)" }}>
-      {/* Cabecera */}
-      <div
-        className="flex flex-wrap items-center justify-between gap-4 px-5 py-4"
-        style={{ borderBottom: "1px solid var(--border)" }}
-      >
-        <h2 className="text-[20px] font-bold text-white">Matriz de Costos</h2>
-        <div className="flex gap-2">
-          <PdfShareButton matrix={rows} />
-          <button
-            onClick={loadMatrix}
-            className="btn-ghost text-sm"
-            title="Disponible cuando hay cambios pendientes"
-          >
-            ↻ Recalcular
-          </button>
+    <div className={embedded ? "" : "min-h-screen pb-24"} style={{ background: embedded ? "transparent" : "var(--bg-base)" }}>
+      {/* Cabecera — solo standalone */}
+      {!embedded && (
+        <div
+          className="flex flex-wrap items-center justify-between gap-4 px-5 py-4"
+          style={{ borderBottom: "1px solid var(--border)" }}
+        >
+          <h2 className="text-[20px] font-bold text-white">Matriz de Costos</h2>
+          <div className="flex gap-2">
+            <PdfShareButton matrix={rows} />
+            <button
+              onClick={loadMatrix}
+              className="btn-ghost text-sm"
+              title="Disponible cuando hay cambios pendientes"
+            >
+              ↻ Recalcular
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Filtros */}
       <div className="flex flex-wrap gap-3 px-5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
@@ -249,15 +252,17 @@ export default function CostMatrixView() {
         )}
       </div>
 
-      {/* FAB — Cargar Servicio */}
-      <a
-        href="/matriz/cargar"
-        className="fab"
-        style={{ bottom: "6rem", right: "1.25rem" }}
-        title="Cargar Servicio"
-      >
-        +
-      </a>
+      {/* FAB — Cargar Servicio (solo standalone) */}
+      {!embedded && (
+        <a
+          href="/matriz/cargar"
+          className="fab"
+          style={{ bottom: "6rem", right: "1.25rem" }}
+          title="Cargar Servicio"
+        >
+          +
+        </a>
+      )}
     </div>
   );
 }

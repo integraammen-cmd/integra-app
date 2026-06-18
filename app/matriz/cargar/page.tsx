@@ -1,7 +1,8 @@
-// [FIX v0.2.1]: Cargar Servicio wrapper — Integra Mutual brand identity
+// [FEATURE v0.3.0]: Ajustes extendidos — carga de servicios + config de estadísticas
 "use client";
 
 import CostMatrixForm from "../../components/CostMatrixForm";
+import SettingsPanel from "../../components/SettingsPanel";
 import { useRouter } from "next/navigation";
 
 export default function CargarServicioPage() {
@@ -22,7 +23,10 @@ export default function CargarServicioPage() {
         </svg>
         Volver a la matriz
       </button>
-      <CostMatrixForm onSaved={() => {}} />
+      <div className="space-y-6">
+        <CostMatrixForm onSaved={() => {}} />
+        <SettingsPanel />
+      </div>
     </div>
   );
 }
