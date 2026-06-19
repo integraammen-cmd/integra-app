@@ -80,25 +80,23 @@ export default function CostMatrixView({ embedded }: { embedded?: boolean }) {
 
   return (
     <div className={embedded ? "" : "min-h-screen pb-24"} style={{ background: embedded ? "transparent" : "var(--bg-base)" }}>
-      {/* Cabecera — solo standalone */}
-      {!embedded && (
-        <div
-          className="flex flex-wrap items-center justify-between gap-4 px-5 py-4"
-          style={{ borderBottom: "1px solid var(--border)" }}
-        >
-          <h2 className="text-[20px] font-bold text-white">Matriz de Costos</h2>
-          <div className="flex gap-2">
-            <PdfShareButton matrix={rows} />
-            <button
-              onClick={loadMatrix}
-              className="btn-ghost text-sm"
-              title="Disponible cuando hay cambios pendientes"
-            >
-              ↻ Recalcular
-            </button>
-          </div>
+      {/* Cabecera con título + botones de acción */}
+      <div
+        className="flex flex-wrap items-center justify-between gap-4 px-5 py-4"
+        style={{ borderBottom: "1px solid var(--border)" }}
+      >
+        <h2 className="text-[20px] font-bold text-white">Matriz de Costos</h2>
+        <div className="flex gap-2">
+          <PdfShareButton matrix={rows} />
+          <button
+            onClick={loadMatrix}
+            className="btn-ghost text-sm"
+            title="Disponible cuando hay cambios pendientes"
+          >
+            ↻ Recalcular
+          </button>
         </div>
-      )}
+      </div>
 
       {/* Filtros */}
       <div className="flex flex-wrap gap-3 px-5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
