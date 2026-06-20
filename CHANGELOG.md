@@ -1,3 +1,90 @@
+## [0.3.1] — 2026-06-20
+
+### Tipo: FIX
+### Autor: Coordinador General (asistido por GitHub Copilot — DeepSeek V4 Pro)
+### Estado: COMPLETADO
+### Ejecutado en: VS Code
+
+---
+
+### Motivación
+Post-deploy de v0.3.0 se detectaron tres problemas críticos:
+1. Los botones "Exportar PDF" y "WhatsApp" desaparecieron de la pantalla Informes
+   al usar el componente en modo embedded (tabs).
+2. La app no se podía instalar como PWA en Chrome Android — solo ofrecía
+   "Crear acceso directo" porque el service worker nunca se registraba.
+3. El chat IA dependía de `GEMINI_API_KEY`, que no se podía configurar en
+   Vercel Hobby sin upgradear a Pro. Además, sin la key el chat mostraba
+   datos crudos en vez de respuestas formateadas.
+
+---
+
+### Cambios realizados
+
+#### Fix 5 — Botones PDF y WhatsApp en Informes
+- [x] `CostMatrixView.tsx`: eliminado condicional `!embedded` que ocultaba
+  la cabecera con título y botones de acción en modo tab.
+- [x] Botón "Exportar PDF" (`btn-primary`) y "WhatsApp" (`btn-secondary`)
+  ahora visibles en `/matriz` pestaña Matriz, debajo del título y antes
+  del buscador.
+
+#### Fix 6 — Instalación PWA en Chrome Android
+- [x] `PwaRegister.tsx` (NUEVO): componente cliente que registra `sw.js`
+  con `navigator.serviceWorker.register()`.
+- [x] `layout.tsx`: agrega `<PwaRegister />` antes de `{children}`.
+- [x] `manifest.json`: agrega `scope: "/"`, `purpose: "any maskable"` en
+  iconos, y `start_url: "/?source=pwa"` para tracking.
+
+#### Fix 7 — Chat IA sin dependencia de Gemini
+- [x] `app/api/chat/route.ts`: reescritura completa con motor local de
+  intención que detecta palabras clave y consulta las tablas correctas.
+- [x] Sin API key: responde con datos 100% reales de Supabase.
+- [x] Con API key (opcional): Gemini mejora la redacción sobre datos ya
+  validados por el motor local.
+- [x] Intenciones soportadas: "servicio más caro/barato", "servicios sin
+  precio", "costo promedio", "eventos urgentes/semana/hoy", "cuántos
+  servicios", "servicios por categoría", "resumen operativo".
+
+---
+
+### Archivos modificados
+
+| Archivo | Tipo de cambio |
+|---|---|
+| `app/components/CostMatrixView.tsx` | MODIFICADO — cabecera siempre visible |
+| `app/components/PwaRegister.tsx` | NUEVO — registro de service worker |
+| `app/layout.tsx` | MODIFICADO — importa PwaRegister |
+| `public/manifest.json` | MODIFICADO — scope + maskable + start_url |
+| `app/api/chat/route.ts` | REESCRITO — motor local sin dependencia externa |
+
+---
+
+### QA pendiente de verificar
+
+- [ ] Botones PDF y WhatsApp visibles en `/matriz` pestaña Matriz
+- [ ] PDF se descarga con formato correcto (sin "undefined")
+- [ ] WhatsApp abre selector de compartir con PDF adjunto
+- [ ] Chrome Android ofrece "Instalar app" (no "Acceso directo")
+- [ ] PWA instalada abre en modo standalone sin barra del navegador
+- [ ] Chat responde "servicio más caro" con top 5 real
+- [ ] Chat responde "eventos urgentes" solo los del usuario
+- [ ] Chat responde "resumen operativo" con KPIs correctos
+- [ ] Chat responde preguntas no soportadas con resumen general
+- [ ] Sin errores en consola del navegador
+- [ ] Sin errores en logs de Vercel
+
+---
+
+### Commits
+
+| Hash | Mensaje |
+|---|---|
+| `19b0406` | fix: restaurar botones PDF y WhatsApp en pantalla Informes (fix #5) |
+| `75c6b97` | fix: registro de service worker + scope manifest para instalación PWA en Chrome Android |
+| `8fc666f` | fix: motor de chat 100% local — sin dependencia de Gemini, sin alucinaciones |
+
+---
+
 ## [0.3.0] — 2026-06-17
 
 ### Tipo: FEATURE
