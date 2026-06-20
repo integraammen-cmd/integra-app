@@ -1,4 +1,5 @@
 // [FEATURE v0.3.0]: Informes con tabs — Matriz | Estadísticas | Comparador
+// [FIX v0.2.4]: Tabs rediseñados como pills grandes con scroll horizontal
 "use client";
 
 import { useState, useEffect } from "react";
@@ -29,17 +30,30 @@ export default function MatrizPage() {
   return (
     <div className="page-container" style={{ background: "var(--bg-base)", minHeight: "100vh" }}>
       {/* Header con tabs */}
-      <header style={{ borderBottom: "1px solid var(--border)", padding: "16px 16px 0 16px", margin: "0 -16px" }}>
+      <header style={{ borderBottom: "1px solid var(--border)", padding: "16px 16px 12px 16px", margin: "0 -16px" }}>
         <h1 className="text-[20px] font-bold text-white px-0">Informes</h1>
-        <div className="flex gap-0 mt-3">
+        {/* [FIX v0.2.4]: Pills con scroll horizontal */}
+        <div
+          className="flex gap-2.5 mt-3 overflow-x-auto pb-1"
+          style={{ scrollbarWidth: "none" }}
+        >
           {TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className="px-4 py-2.5 text-xs font-semibold transition-all border-b-2"
+              className="flex-shrink-0"
               style={{
-                color: activeTab === tab.id ? "var(--accent-green)" : "var(--text-muted)",
-                borderColor: activeTab === tab.id ? "var(--accent-green)" : "transparent",
+                padding: "10px 20px",
+                borderRadius: 10,
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "all 0.2s",
+                minWidth: 100,
+                textAlign: "center",
+                background: activeTab === tab.id ? "var(--accent-green)" : "var(--bg-card)",
+                color: activeTab === tab.id ? "#0A1A0A" : "var(--text-secondary)",
+                border: activeTab === tab.id ? "none" : "1px solid var(--border)",
               }}
             >
               {tab.label}

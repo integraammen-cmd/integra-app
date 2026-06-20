@@ -1,8 +1,10 @@
 // [REFACTOR v0.2.0]: CostMatrixView redesign — Integra Mutual brand identity
+// [FIX v0.2.4]: Botón Importar precios CSV + modal
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import PdfShareButton from "./PdfShareButton";
+import ImportPricesModal from "./ImportPricesModal";
 
 type MatrixRow = {
   id: string;
@@ -24,11 +26,13 @@ const PARTNER_HEADERS = [
 ] as const;
 
 // [FEATURE v0.3.0]: soporta prop embedded para modo tab
+// [FIX v0.2.4]: estado para modal de importación
 export default function CostMatrixView({ embedded }: { embedded?: boolean }) {
   const [rows, setRows] = useState<MatrixRow[]>([]);
   const [search, setSearch] = useState("");
   const [groupFilter, setGroupFilter] = useState("todas");
   const [loading, setLoading] = useState(true);
+  const [importModalOpen, setImportModalOpen] = useState(false);
 
   const loadMatrix = useCallback(async () => {
     setLoading(true);
@@ -80,6 +84,13 @@ export default function CostMatrixView({ embedded }: { embedded?: boolean }) {
 
   return (
     <div className={embedded ? "" : "min-h-screen pb-24"} style={{ background: embedded ? "transparent" : "var(--bg-base)" }}>
+      {/* [FIX v0.2.4]: Modal de importación CSV */}
+      <ImportPricesModal
+        isOpen={importModalOpen}
+        onClose={() => setImportModalOpen(false)}
+        onImported={() => { loadMatrix(); }}
+      />
+
       {/* Cabecera con título + botones de acción */}
       <div
         className="flex flex-wrap items-center justify-between gap-4 px-5 py-4"
@@ -88,6 +99,14 @@ export default function CostMatrixView({ embedded }: { embedded?: boolean }) {
         <h2 className="text-[20px] font-bold text-white">Matriz de Costos</h2>
         <div className="flex gap-2">
           <PdfShareButton matrix={rows} />
+          {/* [FIX v0.2.4]: Botón Importar precios */}
+          <button
+            onClick={() => setImportModalOpen(true)}
+            className="btn-secondary text-sm"
+            style={{ padding: "8px 16px" }}
+          >
+            📤 Importar precios
+          </button>
           <button
             onClick={loadMatrix}
             className="btn-ghost text-sm"

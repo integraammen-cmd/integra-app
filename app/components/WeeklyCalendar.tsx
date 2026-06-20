@@ -177,15 +177,24 @@ export default function WeeklyCalendar() {
             {new Date().toLocaleDateString("es-AR", { year: "numeric" })}
           </span>
         </div>
-        <div className="flex gap-1">
+        {/* [FIX v0.2.4]: Toggle pills estilo unificado */}
+        <div className="flex gap-2.5">
           {(["semanal", "diario"] as ViewMode[]).map((m) => (
             <button
               key={m}
               onClick={() => setViewMode(m)}
-              className="rounded-full px-4 py-1.5 text-xs font-semibold transition-all capitalize"
               style={{
+                padding: "10px 20px",
+                borderRadius: 10,
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "all 0.2s",
+                minWidth: 100,
+                textAlign: "center",
                 background: viewMode === m ? "var(--accent-green)" : "var(--bg-card)",
                 color: viewMode === m ? "#0A1A0A" : "var(--text-secondary)",
+                border: viewMode === m ? "none" : "1px solid var(--border)",
               }}
             >
               {m === "semanal" ? "Semana" : "Día"}
