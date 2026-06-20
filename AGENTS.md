@@ -10,6 +10,9 @@ This project uses Next.js App Router. API routes are in `app/api/`, components i
 ## Regla de oro
 **Si un archivo ya fue leído en esta sesión, NO se vuelve a leer.**
 
+## Etapa 0 — WORKFLOW (leer ANTES de cualquier acción)
+0. `WORKFLOW.md` — ciclo diario: registrar → ejecutar → commit → push
+
 ## Etapa 1 — Contexto mínimo (leer siempre al iniciar)
 1. `PRIMORDIAL.md` — contexto esencial, <200 líneas
 2. `spec/README.md` — mapa de archivos spec
@@ -39,4 +42,6 @@ This project uses Next.js App Router. API routes are in `app/api/`, components i
 - NO leer `openapi.yaml` si la tarea no toca endpoints.
 - NO crear archivos sin validar contra `SPEC_MATRIX.md`.
 - NUNCA exponer API keys en código o frontend.
+- NUNCA ejecutar código sin antes registrar en `logs/CHANGELOG_DEV.md` y crear LOG diario.
+- NUNCA hacer commit sin haber completado los registros (CHANGELOG + LOG).
 <!-- END:project-reading-order -->

@@ -38,3 +38,24 @@
 **Archivos tocados**: `spec/init_schema.sql`.
 **Commit**: —
 **Próximo paso**: Ejecutar script en Supabase → confirmar → Paso 4 (Google OAuth).
+
+### [2026-06-20] — Workflow sistemático: registrar antes de ejecutar
+
+**Prompt**: Crear archivo LOG y establecer workflow donde ANTES de cada prompt se genere CHANGELOG + LOG, se ejecute, y se haga commit + push. Guardar la orden en el archivo correspondiente como guía de desarrollo.
+
+**Acción esperada**: Crear WORKFLOW_TEMPLATE.md (canónico), WORKFLOW.md (instancia Integra), actualizar AGENTS.md, crear LOG diario.
+
+**Archivos previstos**:
+- `tutor-universitario/templates/WORKFLOW_TEMPLATE.md` (NUEVO)
+- `integra-mutual/WORKFLOW.md` (NUEVO)
+- `integra-mutual/AGENTS.md` (MODIFICADO)
+- `integra-mutual/logs/2026-06-20-docs-v0.3.2.md` (NUEVO)
+- `integra-mutual/logs/CHANGELOG_DEV.md` (MODIFICADO)
+
+**Resultado**: Éxito. Workflow de 6 pasos establecido como estándar. AGENTS.md actualizado con Etapa 0 + prohibiciones de registro.
+
+**Archivos tocados**: 5 archivos (3 nuevos, 2 modificados).
+
+**Commit**: (pendiente)
+
+**Próximo paso**: Continuar con el desarrollo de Integra siguiendo el nuevo workflow. Próximo prompt: lo que defina Matute.
