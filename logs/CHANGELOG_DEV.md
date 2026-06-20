@@ -56,6 +56,6 @@
 
 **Archivos tocados**: 5 archivos (3 nuevos, 2 modificados).
 
-**Commit**: (pendiente)
+**Commit**: `e743506`
 
 **Próximo paso**: Continuar con el desarrollo de Integra siguiendo el nuevo workflow. Próximo prompt: lo que defina Matute.
