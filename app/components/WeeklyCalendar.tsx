@@ -1,4 +1,4 @@
-// [FIX v0.2.3]: WeeklyCalendar — bloques visuales, toggle semanal/diario, timezone fix
+// [FIX v0.2.5]: Calendario simplificado — sin categorías, todo "reunión", edición inline
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
@@ -9,7 +9,6 @@ type Event = {
   title: string;
   start_time: string;
   end_time: string | null;
-  category: "salud" | "sociales" | "gremial" | "admin" | "urgente";
   alarm_enabled: boolean;
 };
 
@@ -85,7 +84,6 @@ export default function WeeklyCalendar() {
   const [form, setForm] = useState({
     title: "",
     start_time: "",
-    category: "admin" as Event["category"],
     alarm_enabled: false,
   });
   const [selectedDate, setSelectedDate] = useState(fmtDate(new Date()));
@@ -96,6 +94,10 @@ export default function WeeklyCalendar() {
   const [toast, setToast] = useState<{ mensaje: string; tipo: "success" | "error"; visible: boolean }>({
     mensaje: "", tipo: "success", visible: false,
   });
+
+  // [FIX v0.2.5]: Edición de eventos
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [editForm, setEditForm] = useState({ title: "", date: "", time: "" });
 
   const weekDays = getWeekDays();
   const hours = Array.from({ length: TOTAL_HOURS + 1 }, (_, i) => i + START_HOUR);
@@ -118,6 +120,7 @@ export default function WeeklyCalendar() {
     return null;
   }
 
+  // --- Crear evento ---
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -128,7 +131,8 @@ export default function WeeklyCalendar() {
     const res = await fetch("/api/events", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: form.title, start_time: ts, category: form.category, alarm_enabled: form.alarm_enabled }),
+      // [FIX v0.2.5]: Categoría fija 'admin' — todo es reunión
+      body: JSON.stringify({ title: form.title, start_time: ts, category: "admin", alarm_enabled: form.alarm_enabled }),
     });
     if (!res.ok) {
       const msg = (await res.json()).error;
@@ -136,15 +140,46 @@ export default function WeeklyCalendar() {
       setToast({ mensaje: msg || "Error", tipo: "error", visible: true });
       return;
     }
-    setToast({ mensaje: "Evento creado", tipo: "success", visible: true });
+    setToast({ mensaje: "Reunión agendada", tipo: "success", visible: true });
     setShowForm(false);
-    setForm({ title: "", start_time: "", category: "admin", alarm_enabled: false });
+    setForm({ title: "", start_time: "", alarm_enabled: false });
     loadEvents();
   }
 
+  // --- Eliminar evento ---
   async function handleDelete(id: string) {
     await fetch(`/api/events/${id}`, { method: "DELETE" });
-    setToast({ mensaje: "Evento eliminado", tipo: "success", visible: true });
+    setToast({ mensaje: "Reunión eliminada", tipo: "success", visible: true });
+    setEditingEvent(null);
+    loadEvents();
+  }
+
+  // --- Editar evento ---
+  function openEdit(ev: Event) {
+    const fecha = toArgentinaDate(ev.start_time);
+    const hora = fmtTime24(ev.start_time);
+    setEditingEvent(ev);
+    setEditForm({ title: ev.title, date: fecha, time: hora });
+    setError(null);
+  }
+
+  async function handleEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editForm.title.trim()) return;
+    const tErr = validateTime(editForm.time);
+    if (tErr) { setError(tErr); return; }
+    const ts = `${editForm.date}T${editForm.time}:00-03:00`;
+    const res = await fetch(`/api/events/${editingEvent!.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: editForm.title, start_time: ts }),
+    });
+    if (!res.ok) {
+      setToast({ mensaje: "Error al editar", tipo: "error", visible: true });
+      return;
+    }
+    setToast({ mensaje: "Reunión actualizada", tipo: "success", visible: true });
+    setEditingEvent(null);
     loadEvents();
   }
 
@@ -165,7 +200,7 @@ export default function WeeklyCalendar() {
     <div className="pb-24" style={{ background: "var(--bg-base)" }}>
       <Toast mensaje={toast.mensaje} tipo={toast.tipo} visible={toast.visible} onClose={() => setToast((t) => ({ ...t, visible: false }))} />
 
-      {/* Header + toggle */}
+      {/* Header + toggle pills */}
       <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-[20px] font-bold text-white">
@@ -184,14 +219,8 @@ export default function WeeklyCalendar() {
               key={m}
               onClick={() => setViewMode(m)}
               style={{
-                padding: "10px 20px",
-                borderRadius: 10,
-                fontSize: 14,
-                fontWeight: 600,
-                cursor: "pointer",
-                transition: "all 0.2s",
-                minWidth: 100,
-                textAlign: "center",
+                padding: "10px 20px", borderRadius: 10, fontSize: 14, fontWeight: 600,
+                cursor: "pointer", transition: "all 0.2s", minWidth: 100, textAlign: "center",
                 background: viewMode === m ? "var(--accent-green)" : "var(--bg-card)",
                 color: viewMode === m ? "#0A1A0A" : "var(--text-secondary)",
                 border: viewMode === m ? "none" : "1px solid var(--border)",
@@ -241,26 +270,22 @@ export default function WeeklyCalendar() {
                     </div>
                     <div className="flex-1 relative" style={{ borderLeft: "1px solid var(--border)" }}>
                       {evts.map((ev) => {
-                        const isUrg = ev.category === "urgente";
                         const top = getEventTop(ev.start_time) - (h - START_HOUR) * HOUR_HEIGHT;
                         const hgt = getEventHeight(ev.start_time, ev.end_time);
                         return (
                           <div
                             key={ev.id}
+                            onClick={() => openEdit(ev)}
                             className="absolute left-1 right-1 rounded-lg px-2 py-1 text-[11px] cursor-pointer group overflow-hidden"
                             style={{
                               top, height: Math.min(hgt, HOUR_HEIGHT * 3),
-                              background: isUrg ? "rgba(239,68,68,0.20)" : "rgba(0,212,122,0.20)",
-                              borderLeft: `3px solid ${isUrg ? "var(--state-error)" : "var(--accent-green)"}`,
+                              background: "rgba(0,212,122,0.20)",
+                              borderLeft: "3px solid var(--accent-green)",
                               color: "var(--text-primary)", zIndex: 5,
                             }}
                           >
                             <span className="font-medium">{ev.title}</span>
-                            <button
-                              onClick={() => handleDelete(ev.id)}
-                              className="absolute top-0 right-0 -mt-1 -mr-1 rounded-full w-4 h-4 text-[10px] text-white opacity-0 group-hover:opacity-100 flex items-center justify-center"
-                              style={{ background: "var(--state-error)" }}
-                            >×</button>
+                            {ev.alarm_enabled && <span className="ml-1">🔔</span>}
                           </div>
                         );
                       })}
@@ -271,21 +296,24 @@ export default function WeeklyCalendar() {
             </div>
           </div>
 
+          {/* Lista de eventos del día seleccionado */}
           {dayEvents.length > 0 && (
             <div className="px-4 py-3 space-y-1.5" style={{ borderTop: "1px solid var(--border)" }}>
               <h3 className="text-xs font-semibold mb-2 uppercase tracking-wider" style={{ color: "var(--accent-green)" }}>
-                {dayEvents.length} evento{dayEvents.length > 1 ? "s" : ""} el {fmtDayShort(selectedDayDate)}
+                {dayEvents.length} reunión{dayEvents.length > 1 ? "es" : ""} el {fmtDayShort(selectedDayDate)}
               </h3>
-              {dayEvents.map((ev) => {
-                const isUrg = ev.category === "urgente";
-                return (
-                  <div key={ev.id} className="flex items-center gap-2 text-xs py-1.5 px-2 rounded" style={{ background: "var(--bg-overlay)" }}>
-                    <span className="w-12 font-medium" style={{ color: "var(--accent-green)" }}>{fmtTime24(ev.start_time)}</span>
-                    {isUrg && <span className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase" style={{ background: "rgba(255,92,92,0.20)", color: "var(--state-error)" }}>Urgente</span>}
-                    <span className="text-white font-medium">{ev.title}</span>
-                  </div>
-                );
-              })}
+              {dayEvents.map((ev) => (
+                <div
+                  key={ev.id}
+                  onClick={() => openEdit(ev)}
+                  className="flex items-center gap-2 text-xs py-1.5 px-2 rounded cursor-pointer"
+                  style={{ background: "var(--bg-overlay)" }}
+                >
+                  <span className="w-12 font-medium" style={{ color: "var(--accent-green)" }}>{fmtTime24(ev.start_time)}</span>
+                  <span className="text-white font-medium">{ev.title}</span>
+                  {ev.alarm_enabled && <span>🔔</span>}
+                </div>
+              ))}
             </div>
           )}
         </>
@@ -318,26 +346,22 @@ export default function WeeklyCalendar() {
                     </div>
                     <div className="flex-1 relative" style={{ borderLeft: "1px solid var(--border)" }}>
                       {evts.map((ev) => {
-                        const isUrg = ev.category === "urgente";
                         const top = getEventTop(ev.start_time) - (h - START_HOUR) * HOUR_HEIGHT;
                         const hgt = getEventHeight(ev.start_time, ev.end_time);
                         return (
                           <div
                             key={ev.id}
+                            onClick={() => openEdit(ev)}
                             className="absolute left-1 right-1 rounded-lg px-2 py-1 text-[11px] cursor-pointer group overflow-hidden"
                             style={{
                               top, height: Math.min(hgt, HOUR_HEIGHT * 3),
-                              background: isUrg ? "rgba(239,68,68,0.20)" : "rgba(0,212,122,0.20)",
-                              borderLeft: `3px solid ${isUrg ? "var(--state-error)" : "var(--accent-green)"}`,
+                              background: "rgba(0,212,122,0.20)",
+                              borderLeft: "3px solid var(--accent-green)",
                               color: "var(--text-primary)", zIndex: 5,
                             }}
                           >
                             <span className="font-medium">{ev.title}</span>
-                            <button
-                              onClick={() => handleDelete(ev.id)}
-                              className="absolute top-0 right-0 -mt-1 -mr-1 rounded-full w-4 h-4 text-[10px] text-white opacity-0 group-hover:opacity-100 flex items-center justify-center"
-                              style={{ background: "var(--state-error)" }}
-                            >×</button>
+                            {ev.alarm_enabled && <span className="ml-1">🔔</span>}
                           </div>
                         );
                       })}
@@ -351,18 +375,20 @@ export default function WeeklyCalendar() {
           {dailyViewEvents.length > 0 && (
             <div className="px-4 py-3 space-y-1.5" style={{ borderTop: "1px solid var(--border)" }}>
               <h3 className="text-xs font-semibold mb-2 uppercase tracking-wider" style={{ color: "var(--accent-green)" }}>
-                {dailyViewEvents.length} evento{dailyViewEvents.length > 1 ? "s" : ""} el {fmtDayShort(dailyDate)}
+                {dailyViewEvents.length} reunión{dailyViewEvents.length > 1 ? "es" : ""} el {fmtDayShort(dailyDate)}
               </h3>
-              {dailyViewEvents.map((ev) => {
-                const isUrg = ev.category === "urgente";
-                return (
-                  <div key={ev.id} className="flex items-center gap-2 text-xs py-1.5 px-2 rounded" style={{ background: "var(--bg-overlay)" }}>
-                    <span className="w-12 font-medium" style={{ color: "var(--accent-green)" }}>{fmtTime24(ev.start_time)}</span>
-                    {isUrg && <span className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase" style={{ background: "rgba(255,92,92,0.20)", color: "var(--state-error)" }}>Urgente</span>}
-                    <span className="text-white font-medium">{ev.title}</span>
-                  </div>
-                );
-              })}
+              {dailyViewEvents.map((ev) => (
+                <div
+                  key={ev.id}
+                  onClick={() => openEdit(ev)}
+                  className="flex items-center gap-2 text-xs py-1.5 px-2 rounded cursor-pointer"
+                  style={{ background: "var(--bg-overlay)" }}
+                >
+                  <span className="w-12 font-medium" style={{ color: "var(--accent-green)" }}>{fmtTime24(ev.start_time)}</span>
+                  <span className="text-white font-medium">{ev.title}</span>
+                  {ev.alarm_enabled && <span>🔔</span>}
+                </div>
+              ))}
             </div>
           )}
         </>
@@ -373,22 +399,22 @@ export default function WeeklyCalendar() {
         onClick={() => {
           setSelectedDate(viewMode === "semanal" ? selectedDay : fmtDate(dailyDate));
           setShowForm(!showForm);
+          setError(null);
         }}
         className="fab"
         style={{ bottom: "5rem", right: "1.25rem" }}
       >+</button>
 
-      {/* Form modal */}
+      {/* Modal: NUEVA reunión */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)" }}>
-          <div className="card w-full max-w-sm">
-            <h3 className="text-lg font-bold text-white mb-4">Nuevo Evento</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)" }} onClick={() => setShowForm(false)}>
+          <div className="card w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-white mb-4">Nueva Reunión</h3>
             <form onSubmit={handleCreate} className="space-y-3">
               <input
-                type="text" placeholder="Nombre del evento" value={form.title}
+                type="text" placeholder="Nombre de la reunión" value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
                 className="input-field" autoFocus
-                style={!form.title.trim() && error ? { borderColor: "var(--state-error)" } : undefined}
               />
               <div>
                 <label className="text-xs font-medium text-white/60 mb-1 block">Fecha</label>
@@ -403,15 +429,6 @@ export default function WeeklyCalendar() {
                   onChange={(e) => setForm({ ...form, start_time: e.target.value })} className="input-field"
                 />
               </div>
-              <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value as Event["category"] })}
-                className="input-field" style={{ appearance: "auto" }}
-              >
-                <option value="admin" style={{ background: "#0A0F2E", color: "#fff" }}>Admin</option>
-                <option value="salud" style={{ background: "#0A0F2E", color: "#fff" }}>Salud</option>
-                <option value="sociales" style={{ background: "#0A0F2E", color: "#fff" }}>Sociales</option>
-                <option value="gremial" style={{ background: "#0A0F2E", color: "#fff" }}>Gremial</option>
-                <option value="urgente" style={{ background: "#0A0F2E", color: "#fff" }}>Urgente</option>
-              </select>
               <label className="flex items-center gap-2 text-sm text-white/70 cursor-pointer">
                 <input type="checkbox" checked={form.alarm_enabled} onChange={(e) => setForm({ ...form, alarm_enabled: e.target.checked })} />
                 Activar alarma
@@ -422,6 +439,49 @@ export default function WeeklyCalendar() {
                 <button type="button" onClick={() => { setShowForm(false); setError(null); }} className="btn-ghost">Cancelar</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* [FIX v0.2.5]: Modal EDITAR reunión */}
+      {editingEvent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)" }} onClick={() => setEditingEvent(null)}>
+          <div className="card w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-white mb-4">Editar Reunión</h3>
+            <form onSubmit={handleEdit} className="space-y-3">
+              <input
+                type="text" placeholder="Nombre de la reunión" value={editForm.title}
+                onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                className="input-field" autoFocus
+              />
+              <div>
+                <label className="text-xs font-medium text-white/60 mb-1 block">Fecha</label>
+                <input type="date" value={editForm.date}
+                  onChange={(e) => setEditForm({ ...editForm, date: e.target.value })}
+                  className="input-field"
+                  style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "10px", color: "var(--text-primary)", padding: "12px 16px" }}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-white/60 mb-1 block">Hora</label>
+                <input type="time" min="07:00" max="21:00" value={editForm.time}
+                  onChange={(e) => setEditForm({ ...editForm, time: e.target.value })} className="input-field"
+                />
+              </div>
+              {error && <p className="text-sm" style={{ color: "var(--state-error)" }}>{error}</p>}
+              <div className="flex gap-2 pt-2">
+                <button type="submit" className="btn-primary flex-1">Guardar cambios</button>
+                <button type="button" onClick={() => setEditingEvent(null)} className="btn-ghost">Cancelar</button>
+              </div>
+            </form>
+            {/* Botón eliminar separado */}
+            <button
+              onClick={() => handleDelete(editingEvent.id)}
+              className="w-full mt-3 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+              style={{ background: "rgba(239,68,68,0.15)", color: "var(--state-error)", border: "1px solid rgba(239,68,68,0.3)" }}
+            >
+              🗑 Eliminar reunión
+            </button>
           </div>
         </div>
       )}

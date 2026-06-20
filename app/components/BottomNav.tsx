@@ -85,16 +85,16 @@ export default function BottomNav() {
       className="fixed bottom-0 left-0 right-0 z-50 safe-area-bottom"
       style={{ background: "var(--bg-base)", borderTop: "1px solid var(--border)" }}
     >
-      <div className="mx-auto flex max-w-lg items-center justify-around py-1.5">
+      <div className="mx-auto flex max-w-lg items-center justify-around py-2">
         {NAV_ITEMS.map((item) => {
           const active = isActive(item.href);
           return (
             <Link key={item.href} href={item.href}
-              className="flex flex-col items-center gap-0.5 px-1.5 py-1 transition-colors"
-              style={{ color: active ? "var(--accent-green)" : "var(--text-muted)", fontSize: "9px", fontWeight: 500 }}
+              className="flex flex-col items-center gap-1 px-2 py-1.5 transition-colors"
+              style={{ color: active ? "var(--accent-green)" : "var(--text-muted)", fontSize: "10px", fontWeight: 600 }}
             >
-              <span>{item.icon}</span>
-              {active && <span>{item.label}</span>}
+              <span style={{ transform: "scale(1.2)" }}>{item.icon}</span>
+              <span>{item.label}</span>
             </Link>
           );
         })}

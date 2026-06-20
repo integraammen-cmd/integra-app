@@ -1,26 +1,34 @@
-// [REFACTOR v0.2.0]: Service Worker básico para PWA offline
-const CACHE_NAME = "integra-v0.2.0";
-const ASSETS_TO_CACHE = [
-  "/",
-  "/agenda",
-  "/briefing",
-  "/matriz",
-  "/matriz/cargar",
-];
+// [FIX v0.2.5]: Service Worker — network-first, no cachea redirects, más robusto
+const CACHE_NAME = "integra-v0.2.5";
+
+// No pre-cachear HTML (pueden devolver redirect a /login sin auth)
+// Solo cachear en runtime las respuestas exitosas
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
-  );
+  // Skip waiting para activar inmediatamente
+  self.skipWaiting();
 });
 
 self.addEventListener("fetch", (event) => {
+  // Solo interceptar navegación (HTML) y assets estáticos
+  if (event.request.mode !== "navigate") return;
+
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      return cachedResponse || fetch(event.request);
-    })
+    fetch(event.request)
+      .then((response) => {
+        // Solo cachear respuestas 200 (no redirects a /login)
+        if (response.status === 200) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, clone);
+          });
+        }
+        return response;
+      })
+      .catch(() => {
+        // Offline: devolver del cache si existe
+        return caches.match(event.request) as Promise<Response>;
+      })
   );
 });
 
