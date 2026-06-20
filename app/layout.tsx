@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
 import BottomNav from "./components/BottomNav";
+import PwaRegister from "./components/PwaRegister";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -29,6 +30,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#0A0F2E" />
       </head>
       <body className={`${poppins.variable} antialiased min-h-screen`}>
+        <PwaRegister />
         {children}
         <BottomNav />
       </body>
